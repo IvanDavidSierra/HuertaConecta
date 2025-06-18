@@ -1,0 +1,111 @@
+.footer {
+  width: 100%;
+  background: var(--primary-color);
+  color: #fff;
+  padding: 2.5rem 0 1.5rem 0;
+  font-family: 'Merriweather', serif;
+  margin-top: 4rem;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2vw;
+  flex-wrap: wrap;
+  min-height: 40px;
+}
+
+.brand {
+  font-size: 1.2rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+}
+
+.rightLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.rightLinks a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.rightLinks a:hover {
+  opacity: 1;
+}
+
+.social {
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #000000;
+  margin: 1.2rem auto 1.2rem auto;
+  width: 95%;
+  max-width: 1200px;
+}
+
+.bottomRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2vw;
+  flex-wrap: wrap;
+  min-height: 40px;
+}
+
+.menu {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  flex-wrap: wrap;
+}
+
+.menu a {
+  color: #fff;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.menu a:hover {
+  opacity: 1;
+}
+
+.copyright {
+  color: #ffffff;
+  font-size: 0.98rem;
+  opacity: 0.85;
+  margin-left: 2rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .topRow, .bottomRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.2rem;
+    padding: 0 1vw;
+  }
+  .menu {
+    gap: 1.2rem;
+  }
+  .copyright {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+} 

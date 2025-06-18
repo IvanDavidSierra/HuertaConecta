@@ -1,0 +1,157 @@
+.header {
+  background: transparent;
+  width: 100%;
+  padding: 0;
+  box-shadow: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: none;
+  z-index: 10;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 70px;
+  padding: 0 2vw;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  min-width: 180px;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logoImg {
+  height: 32px;
+  margin-right: 0.7rem;
+}
+
+.brand {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.navMenu {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.navLink {
+  color: #fff;
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: color 0.2s;
+  padding: 4px 0;
+}
+
+.navLink:hover {
+  color: #7FB069;
+}
+
+.active {
+  color: #7FB069 !important;
+  font-weight: bold;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  min-width: 180px;
+  justify-content: flex-end;
+}
+
+.loginBtn {
+  color: #4B2067;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  font-family: var(--font-primary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 6px 18px;
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-decoration: none;
+}
+
+.loginBtn:hover {
+  background: #f3eafe;
+  color: #7F56D9;
+}
+
+.signupBtn {
+  color: #fff;
+  background: transparent;
+  border: 1.5px solid #fff;
+  font-size: 1rem;
+  font-family: var(--font-primary);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 6px 18px;
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  text-decoration: none;
+}
+
+.signupBtn:hover {
+  background: #7FB069;
+  color: #fff;
+  border-color: #7FB069;
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 0 1rem;
+  }
+  .navMenu {
+    gap: 1.2rem;
+  }
+  .logoImg {
+    height: 26px;
+  }
+  .brand {
+    font-size: 1rem;
+  }
+  .loginBtn, .signupBtn {
+    padding: 6px 10px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    gap: 0.5rem;
+    padding: 0.5rem 0.5rem;
+  }
+  .navMenu {
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  .right {
+    min-width: unset;
+  }
+} 
