@@ -12,8 +12,8 @@ HuertaConecta es una aplicación móvil que busca conectar las huertas urbanas d
 
 El proyecto está dividido en dos partes principales:
 
-- `/server`: Backend desarrollado con Express.js TypeScript y PostgreSQL
-- `/mobile`: Aplicación móvil desarrollada con React Native
+- `/server`: Backend desarrollado con Express.js, TypeScript y PostgreSQL
+- `/client`: Aplicación web desarrollada con React.js
 
 ## Requisitos del Sistema
 
