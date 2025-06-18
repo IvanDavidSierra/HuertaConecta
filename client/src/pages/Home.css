@@ -1,0 +1,124 @@
+.home-video-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  min-height: 600px;
+}
+
+.home-bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.home-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(44, 62, 80, 0.55); /* Oscurece el video */
+  z-index: 2;
+}
+
+.home-content {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  color: #fff;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.hero h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.hero-play-btn {
+  background: #e74c3c;
+  border: none;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 2rem;
+  margin: 2rem auto;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hero-play-btn:hover {
+  background: #c0392b;
+}
+
+.hero-features {
+  display: flex;
+  gap: 3rem;
+  justify-content: center;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+
+.hero-features div {
+  background: rgba(0,0,0,0.25);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.hero-features h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.hero-features p {
+  font-size: 1rem;
+}
+
+.hero-logo {
+  width: 800px;
+  max-width: 90vw;
+  margin: 0 auto 1.5rem auto;
+  display: block;
+}
+
+.snap-container {
+  /* El scroll snap ahora se aplica al body, no aquí */
+}
+
+.snap-section {
+  scroll-snap-align: start;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+} 
