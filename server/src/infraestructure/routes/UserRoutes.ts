@@ -20,7 +20,7 @@ router.post("/users", async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Error en la creación del usuario" });
     }
-});
+}); 
 
 router.get("/users",async(_req,res)=>{
     try {
