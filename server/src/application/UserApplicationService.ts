@@ -1,5 +1,5 @@
-import {User} from '../domain/User';
-import { UserPort } from '../domain/UserPort';
+import {User} from '../domain/usuarios';
+import { UserPort } from '../domain/usuarios_port';
 
 export class UserApplicationService{
     private port: UserPort;

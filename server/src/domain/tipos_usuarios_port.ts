@@ -1,4 +1,4 @@
-import { TipoUser } from './TipoUser';
+import { TipoUser } from './tipos_usuarios';
 
 export interface TipoUserPort {
     createTipouser(tipoUser: Omit<TipoUser, 'id'>): Promise<number>;

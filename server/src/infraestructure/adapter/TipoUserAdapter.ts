@@ -1,6 +1,6 @@
-import { TipoUserPort } from '../../domain/TipoUserPort';
-import { TipoUser as TipoUserDomain } from '../../domain/TipoUser';
-import { TipoUser as TipoUserEntities } from '../entities/TipoUser';
+import { TipoUserPort } from '../../domain/tipos_usuarios_port';
+import { TipoUser as TipoUserDomain } from '../../domain/tipos_usuarios';
+import { tipos_usuarios as TipoUserEntities } from '../entities/tipos_usuario';
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/data-base';
 
@@ -15,15 +15,15 @@ export class TipoUserAdapter implements TipoUserPort{
     //Transforma la entidad de infraestructura(entidad User.ts) al modelo de dominio (interface User.ts)
     private toDomain(tipoUser: TipoUserEntities): TipoUserDomain {
         return {
-            id: tipoUser.id,
-            name: tipoUser.name,
+            id_tipo_usuario: tipoUser.id_tipo_usuario,
+            descripcion_tipo_usuario: tipoUser.descripcion_tipo_usuario,
         };
     }
     
             //Transforma el modelo de dominio a la entidad de infraestructura
     private toEntity(tipoUser: Omit<TipoUserDomain, "id">): TipoUserEntities {
         const tipoUserEntity = new TipoUserEntities();
-        tipoUserEntity.name = tipoUser.name;
+        tipoUserEntity.descripcion_tipo_usuario = tipoUser.descripcion_tipo_usuario;
         return tipoUserEntity;
     }
 
@@ -32,7 +32,7 @@ export class TipoUserAdapter implements TipoUserPort{
             try{
                 const newTipoUser = this.toEntity(tipoUser);
                 const saveTipoUser = await this.tipoUserRepository.save(newTipoUser);
-                return saveTipoUser.id;
+                return saveTipoUser.id_tipo_usuario;
             }catch(e){
                 console.error("Error creating tipo user", e);
                 throw new Error("Failed to create tipo user");
@@ -41,11 +41,11 @@ export class TipoUserAdapter implements TipoUserPort{
   
     async updateTipouser(id: number, tipoUser: Partial<TipoUserDomain>): Promise<boolean> {
             try {
-                const existingTipoUser = await this.tipoUserRepository.findOne({where:{id:id}})
+                const existingTipoUser = await this.tipoUserRepository.findOne({where:{id_tipo_usuario:id}})
                 if(!existingTipoUser) return false;
                 //Actualizar solo los campos que son enviados
                 Object.assign(existingTipoUser, {
-                name: tipoUser.name ?? existingTipoUser.name,
+                    descripcion_tipo_usuario: tipoUser.descripcion_tipo_usuario ?? existingTipoUser.descripcion_tipo_usuario,
             });
             await this.tipoUserRepository.save(existingTipoUser);
             return true;
@@ -56,7 +56,7 @@ export class TipoUserAdapter implements TipoUserPort{
     }
     async deleteTipouser(id: number): Promise<boolean> {
             try {
-                const existingTipoUser = await this.tipoUserRepository.findOne({where:{id:id}});
+                const existingTipoUser = await this.tipoUserRepository.findOne({where:{id_tipo_usuario:id}});
                 if(!existingTipoUser) return false;
                 await this.tipoUserRepository.remove(existingTipoUser);
                 return true;
@@ -67,7 +67,7 @@ export class TipoUserAdapter implements TipoUserPort{
     }
     async getTipouserById(id: number): Promise<TipoUserDomain | null> {
             try {
-                const existingTipoUser = await this.tipoUserRepository.findOne({where:{id:id}});
+                const existingTipoUser = await this.tipoUserRepository.findOne({where:{id_tipo_usuario:id}});
                 return existingTipoUser ? this.toDomain(existingTipoUser): null;
             } catch (e) {
                 console.error("Error fatching tipo user by id", e);

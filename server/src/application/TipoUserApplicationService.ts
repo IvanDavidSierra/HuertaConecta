@@ -1,5 +1,5 @@
-import { TipoUser } from '../domain/TipoUser';
-import { TipoUserPort } from '../domain/TipoUserPort';
+import { TipoUser } from '../domain/tipos_usuarios';
+import { TipoUserPort } from '../domain/tipos_usuarios_port';
 
 export class TipoUserApplicationService {
     private port: TipoUserPort;

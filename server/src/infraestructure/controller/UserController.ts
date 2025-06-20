@@ -1,5 +1,5 @@
 import {UserApplicationService} from "../../application/UserApplicationService";
-import { User } from "../../domain/User";
+import { User } from "../../domain/usuarios";
 import { Request, Response} from "express";
 export class UserController{
     private app: UserApplicationService;

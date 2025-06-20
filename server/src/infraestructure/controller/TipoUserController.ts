@@ -1,5 +1,5 @@
 import { TipoUserApplicationService } from "../../application/TipoUserApplicationService";
-import { TipoUser } from "../../domain/TipoUser";
+import { TipoUser } from "../../domain/tipos_usuarios";
 import { Request, Response } from "express";
 
 export class TipoUserController {

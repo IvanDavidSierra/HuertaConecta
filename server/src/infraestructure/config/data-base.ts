@@ -1,7 +1,7 @@
 import  { DataSource } from "typeorm";
 import dotenv from "dotenv";
-import { User } from "../entities/User";
-import { TipoUser } from "../entities/TipoUser";
+import { usuarios } from "../entities/usuarios";
+import { tipos_usuarios } from "../entities/tipos_usuario";
 
 dotenv.config();
 export const AppDataSource = new DataSource({
@@ -12,9 +12,8 @@ export const AppDataSource = new DataSource({
     password : process.env.DB_PASSWORD,
     database : process.env.DB_NAME,
     schema : process.env.DB_SCHEMA,
-    synchronize : true,
     logging : true,
-    entities: [User, TipoUser],
+    entities: [usuarios, tipos_usuarios],
 
 });
 
