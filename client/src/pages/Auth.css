@@ -1,7 +1,7 @@
 .auth-bg {
   min-height: 100vh;
   width: 100vw;
-  background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80') center center/cover no-repeat;
+  background: url('../assets/image-login.jpg') center center/cover no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,7 +33,7 @@
 .auth-title {
   font-size: 2.2rem;
   font-weight: bold;
-  color: #2d2056;
+  color: var(--primary-color);
   text-align: center;
   margin-bottom: 2rem;
 }

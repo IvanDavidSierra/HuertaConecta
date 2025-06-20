@@ -12,30 +12,33 @@ const Auth = () => {
       <main>
         <section className="auth-section">
           <div className="auth-form-container">
-            <h2 className="auth-title">{isLogin ? 'Sign In' : 'Sign Up Now'}</h2>
+            <h2 className="auth-title">{isLogin ? 'Iniciar sesión' : 'Registrarse'}</h2>
             {isLogin ? (
               <form className="auth-form">
-                <input type="email" placeholder="Your email" className="auth-input" required />
-                <input type="password" placeholder="Your password" className="auth-input" required />
-                <button type="submit" className="auth-btn">Sign In</button>
+                <input type="email" placeholder="Ingresa tu correo" className="auth-input" required />
+                <input type="password" placeholder="Ingresa tu contraseña" className="auth-input" required />
+                <button type="submit" className="auth-btn">Entrar</button>
                 <div className="auth-switch">
-                  Don&apos;t have an account?{' '}
-                  <span className="auth-link" onClick={() => setIsLogin(false)}>Sign Up</span>
+                  ¿Aún no tienes cuenta?{' '}
+                  <span className="auth-link" onClick={() => setIsLogin(false)}>Registrate</span>
                 </div>
               </form>
             ) : (
               <form className="auth-form">
-                <input type="email" placeholder="Your email" className="auth-input" required />
-                <input type="password" placeholder="Your password" className="auth-input" required />
+                <input type="text" placeholder="Tus nombres" className="auth-input" required />
+                <input type="text" placeholder="Tus apellidos" className="auth-input" required />
+                <input type="email" placeholder="Tu correo" className="auth-input" required />
+                <input type="password" placeholder="Tu contraseña" className="auth-input" required />
+                <input type="password" placeholder="Confirma tu contraseña" className="auth-input" required />
                 <label className="auth-checkbox-label">
                   <input type="checkbox" required />
                   <span className="auth-checkbox-custom" />
-                  I agree to the Terms of Service.
+                  Acepto los términos y condiciones
                 </label>
-                <button type="submit" className="auth-btn">Create an Account</button>
+                <button type="submit" className="auth-btn">Crea tu cuenta</button>
                 <div className="auth-switch">
-                  Do you have an Account?{' '}
-                  <span className="auth-link" onClick={() => setIsLogin(true)}>Sign In</span>
+                  ¿Tienes una cuenta?{' '}
+                  <span className="auth-link" onClick={() => setIsLogin(true)}>Inicia sesión</span>
                 </div>
               </form>
             )}

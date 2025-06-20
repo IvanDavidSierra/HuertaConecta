@@ -5,6 +5,9 @@ import logo from '../assets/huerta_conecta_logo.png';
 import video from '../assets/huerta_conecta_main_video.mp4';
 import FeatureSection from '../components/common/FeatureSection';
 import Footer from '../components/layout/Footer';
+import homeImageUno from '../assets/home-image-uno.jpg';
+import homeImageTwo from '../assets/home-image-two.jpg';
+import homeImageThree from '../assets/home-image-three.jpg';
 
 const Home = () => {
   return (
@@ -21,50 +24,43 @@ const Home = () => {
             <section className="hero">
               <img src={logo} alt="HuertaConecta Logo" className="hero-logo" />
               <h2>Conecta tu huerta con el mundo</h2>
-              <div className="hero-features">
-                <div>
-                  <h3>Generador fácil de usar</h3>
-                  <p>Construye tu red de huertas de forma intuitiva y rápida.</p>
-                </div>
-                <div>
-                  <h3>Comparte y exporta</h3>
-                  <p>Comparte tu progreso y conecta con otros productores y consumidores.</p>
-                </div>
-              </div>
             </section>
           </div>
           <div className="snap-section">
             <FeatureSection
-              image="https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=600&q=80"
-              title="Prototipado Rápido"
-              description="Herramienta poderosa para crear prototipos de tu huerta de manera rápida y sencilla."
-              linkText="Saber más sobre prototipado"
+              image={homeImageUno}
+              title="Sobre Nosotros"
+              description="Somos una comunidad apasionada por la agricultura urbana y la tecnología, dedicada a conectar personas que desean transformar sus espacios en huertas productivas y sostenibles."
+              linkText=""
               linkHref="#"
               features={[
-                { title: 'Basado en Bootstrap', text: 'Diseño confiable y moderno para tu proyecto.' },
-                { title: 'HTML5 & CSS3', text: 'Tecnologías probadas para los mejores resultados.' }
+                { title: 'Compromiso Social', text: 'Fomentamos la colaboración y el aprendizaje entre los miembros de la comunidad.' },
+                { title: 'Innovación', text: 'Utilizamos tecnología para facilitar el acceso a recursos y conocimientos sobre huertas.' }
               ]}
             />
           </div>
           <div className="snap-section">
             <FeatureSection
-              image="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80"
-              title="Creamos Algo Nuevo"
-              description="Un producto que ayuda a diseñadores y desarrolladores a crear sitios web para sus huertas de forma rápida."
+              image={homeImageTwo}
+              title="Nuestros Servicios"
+              description="Ofrecemos herramientas y asesoría para que puedas diseñar, gestionar y optimizar tu huerta desde cualquier lugar."
               features={[
-                { title: '30 nuevas páginas', text: 'Incluye componentes y bloques complejos.' },
-                { title: 'Componentes útiles', text: 'Juega y experimenta con los bloques visuales.' }
+                { title: 'Asesoría Personalizada', text: 'Recibe recomendaciones y acompañamiento de expertos en agricultura urbana.' },
+                { title: 'Gestión Digital', text: 'Administra tu huerta, registra cultivos y accede a recursos desde nuestra plataforma.' }
               ]}
               reverse
             />
           </div>
           <div className="snap-section">
             <FeatureSection
-              image="https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=600&q=80"
-              title="Consejos para tu Huerta"
-              description="Descubre tips y trucos para mejorar tu huerta y compartir con la comunidad."
+              image={homeImageThree}
+              title="¿Cómo Funciona?"
+              description="Conéctate, diseña tu huerta y accede a una red de apoyo y recursos en solo tres pasos."
               linkText="Iniciar sesión"
               linkHref="#"
+              features={[
+                { title: 'Diseña y Gestiona', text: 'Utiliza nuestras herramientas para planificar y monitorear tu huerta.' },
+              ]}
             />
           </div>
         </main>
