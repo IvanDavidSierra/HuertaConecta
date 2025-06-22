@@ -1,6 +1,7 @@
 import { TipoUser } from "./tipos_usuarios";
 
 export interface User{
+    id: number;
     id_usuario:number;
     nombre:string;
     apellido:string;

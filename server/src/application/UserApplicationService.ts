@@ -12,7 +12,7 @@ export class UserApplicationService{
     //3- metodos casos usos logica
 
     async createUser(user: Omit<User,"id">):Promise<number>{
-        const existingUser = await this.port.getUserByEmail(user.email);
+        const existingUser = await this.port.getUserByEmail(user.correo.trim().toLowerCase());
         if(existingUser){
             throw new Error("Email existente");
         }
@@ -23,8 +23,8 @@ export class UserApplicationService{
         if(!existingUser){
             throw new Error("User not found");
         }
-        if(user.email){
-            const emailTaken = await this.port.getUserByEmail(user.email);
+        if(user.correo){
+            const emailTaken = await this.port.getUserByEmail(user.correo);
             if(emailTaken && emailTaken.id !== id){
                 throw new Error('email is already taken by another user');
             }

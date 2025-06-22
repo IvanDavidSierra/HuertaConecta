@@ -88,8 +88,8 @@ export class UserAdapter implements UserPort {
     }
     async getAllUsers(): Promise<UserDomain[]> {
         try {
-            const users = await this.userRepository.find({where:{id_usuario: 1}});
-            return users.map(user => this.toDomain(user));
+            const users = await this.userRepository.find();
+            return users.map(user => this.toDomain(user));  
         } catch (e) {
             console.error("Error fatching user ", e);
             throw new Error("Failed to fetch user");
