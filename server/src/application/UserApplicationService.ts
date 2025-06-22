@@ -11,7 +11,7 @@ export class UserApplicationService{
 
     //3- metodos casos usos logica
 
-    async createUser(user: Omit<User,"id">):Promise<number>{
+    async createUser(user: Omit<User,"id_usuario">):Promise<number>{
         const existingUser = await this.port.getUserByEmail(user.correo.trim().toLowerCase());
         if(existingUser){
             throw new Error("Email existente");

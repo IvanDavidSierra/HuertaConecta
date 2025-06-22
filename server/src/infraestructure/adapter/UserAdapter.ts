@@ -36,7 +36,7 @@ export class UserAdapter implements UserPort {
         return userEntity;
     }
 
-    async createUser(user: Omit<UserDomain, "id">): Promise<number> {
+    async createUser(user: Omit<UserDomain, "id_usuario">): Promise<number> {
         try{
             const newUser = this.toEntity(user);
             const saveUser = await this.userRepository.save(newUser);
