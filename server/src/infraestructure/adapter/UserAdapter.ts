@@ -36,7 +36,7 @@ export class UserAdapter implements UserPort {
         return userEntity;
     }
 
-    async createUser(user: Omit<UserDomain, "id">): Promise<number> {
+    async createUser(user: Omit<UserDomain, "id_usuario">): Promise<number> {
         try{
             const newUser = this.toEntity(user);
             const saveUser = await this.userRepository.save(newUser);
@@ -88,8 +88,8 @@ export class UserAdapter implements UserPort {
     }
     async getAllUsers(): Promise<UserDomain[]> {
         try {
-            const users = await this.userRepository.find({where:{id_usuario: 1}});
-            return users.map(user => this.toDomain(user));
+            const users = await this.userRepository.find();
+            return users.map(user => this.toDomain(user));  
         } catch (e) {
             console.error("Error fatching user ", e);
             throw new Error("Failed to fetch user");

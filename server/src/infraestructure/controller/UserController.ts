@@ -8,10 +8,10 @@ export class UserController{
     }
     async createUser(req: Request, res: Response) {
     try {
-      const { name, email, password, lastName,idTipoUsuario,creationDate,actualizationDate } = req.body;
+      const { nombre, correo, contrasena, apellido, id_tipo_usuario, fecha_creacion } = req.body;
  
       // Validaciones con expresiones regulares
-      if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)?$/.test(name.trim()))
+      if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñ]+)?$/.test(nombre.trim()))
         return res
           .status(400)
           .json({
@@ -19,10 +19,10 @@ export class UserController{
               "El nombre debe tener al menos 3 caracteres y solo contener letras",
           });
  
-      if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email))
+      if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(correo))
         return res.status(400).json({ error: "Correo electrónico no válido" });
  
-      if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password))
+      if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(contrasena))
         return res
           .status(400)
           .json({
@@ -33,7 +33,10 @@ export class UserController{
 
  
       // Crear usuario
-      const user: Omit<User, "id"> = { name, email, password, lastName,idTipoUsuario,creationDate,actualizationDate };
+      const user: Omit<User, "id"> = {
+        nombre, correo, contrasena, apellido, id_tipo_usuario, fecha_creacion,
+        id_usuario: 0
+      };
       const userId = await this.app.createUser(user);
  
       return res
@@ -136,10 +139,10 @@ export class UserController{
         return res.status(400).json({ error: "ID de usuario no válido" });
       }
 
-      let { name, email, password, lastName, idTipoUsuario, creationDate, actualizationDate } = req.body;
+      let { nombre, correo, contrasena, apellido, id_tipo_usuario, fecha_creacion } = req.body;
 
       // Validaciones con expresiones regulares
-      if (name && !/^[a-zA-Z\s]{3,}$/.test(name.trim()))
+      if (nombre && !/^[a-zA-Z\s]{3,}$/.test(nombre.trim()))
         return res
           .status(400)
           .json({
@@ -147,10 +150,10 @@ export class UserController{
               "El nombre debe tener al menos 3 caracteres y solo contener letras",
           });
  
-      if (email && !/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email))
+      if (correo && !/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(correo))
         return res.status(400).json({ error: "Correo electrónico no válido" });
  
-      if (password && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password))
+      if (contrasena && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(contrasena))
         return res
           .status(400)
           .json({
@@ -159,13 +162,12 @@ export class UserController{
           });
 
       const updated = await this.app.updateUser(id, {
-        name, 
-        email,
-        password,
-        lastName,
-        idTipoUsuario,
-        creationDate,
-        actualizationDate
+        nombre, 
+        correo,
+        contrasena,
+        apellido,
+        id_tipo_usuario,
+        fecha_creacion
       });
       if (!updated) {
         return res.status(404).json({ error: "Usuario no encontrado" });
