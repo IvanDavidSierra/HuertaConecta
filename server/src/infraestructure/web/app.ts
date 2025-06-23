@@ -1,6 +1,7 @@
 import express from "express";
 import userRoutes from "../routes/UserRoutes";
 import tipoUserRoutes from "../routes/TipoUserRoutes";
+import authRoutes from "../routes/AuthRoutes";
 
 
 class App {
@@ -15,6 +16,7 @@ class App {
         console.log("routes");
         this.app.use("/api", userRoutes);
         this.app.use("/api", tipoUserRoutes);
+        this.app.use("/api/auth", authRoutes);
     }
 
     private middleware():void{

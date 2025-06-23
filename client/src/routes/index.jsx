@@ -5,6 +5,8 @@ import Services from '../pages/Services';
 import HowItWorks from '../pages/HowItWorks';
 import Contact from '../pages/Contact';
 import Auth from '../pages/Auth';
+import Dashboard from '../pages/Dashboard';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +32,14 @@ const router = createBrowserRouter([
   {
     path: '/auth',
     element: <Auth />,
+  },
+  {
+    path: '/dashboard',
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
   },
 ]);
 

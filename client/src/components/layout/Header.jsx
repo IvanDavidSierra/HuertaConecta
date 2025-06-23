@@ -2,9 +2,12 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import logo from '../../assets/huerta_conecta_mini.png';
+import { useAuth } from '../../context/AuthContext.tsx';
 
 const Header = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  const isLoggedIn = isAuthenticated();
 
   return (
     <header className={styles.header}>
@@ -22,7 +25,9 @@ const Header = () => {
           <Link to="/contacto" className={location.pathname === '/contacto' ? styles.active : styles.navLink}>Contacto</Link>
         </nav>
         <div className={styles.right}>
-          <Link to="/auth" className={styles.signupBtn}>Conéctate</Link>
+          <Link to={isLoggedIn ? "/dashboard" : "/auth"} className={styles.signupBtn}>
+            {isLoggedIn ? "Mi Huerta" : "Conéctate"}
+          </Link>
         </div>
       </div>
     </header>
