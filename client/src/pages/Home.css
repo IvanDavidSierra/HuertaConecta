@@ -1,17 +1,15 @@
 .home-video-container {
-  position: relative;
   width: 100%;
   min-height: 100vh;
   overflow: hidden;
-  min-height: 600px;
 }
 
 .home-bg-video {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   z-index: 1;
 }
@@ -20,8 +18,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background: rgba(44, 62, 80, 0.55); /* Oscurece el video */
   z-index: 2;
 }
