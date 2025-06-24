@@ -4,9 +4,9 @@ import { FaFacebookF, FaInstagram } from 'react-icons/fa';
 import { BsTwitterX } from "react-icons/bs";
 import { Link } from 'react-router-dom';
 
-const Footer = () => {
+const Footer = ({ hide }) => {
   return (
-    <footer className={styles.footer}>
+    <footer className={`${styles.footer} ${hide ? styles.slideDown : ''}`}>
       <div className={styles.topRow}>
         <div className={styles.brand}>HuertaConecta</div>
         <div className={styles.rightLinks}>

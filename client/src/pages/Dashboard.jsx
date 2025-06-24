@@ -1,91 +1,163 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import huertaLogo from '../assets/huerta_conecta_logo.png';
+import { AiOutlineHome } from 'react-icons/ai';
+import { FaUserCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import Loader from '../components/common/Loader';
+import { motion, AnimatePresence } from 'framer-motion';
 import './Dashboard.css';
+
+const huertasEjemplo = [
+  {
+    id: 1,
+    nombre: 'Huerta El Paraíso',
+    direccion: 'Calle 123, Ciudad',
+    descripcion: 'Huerta orgánica con variedad de cultivos',
+  },
+  {
+    id: 2,
+    nombre: 'Huerta Verde',
+    direccion: 'Avenida 456, Pueblo',
+    descripcion: 'Especializada en hortalizas',
+  },
+];
+
+const sugerencias = [
+  {
+    id: 3,
+    nombre: 'Huerta Urbana',
+    seguidores: '1.2K',
+  },
+  {
+    id: 4,
+    nombre: 'EcoHuerta',
+    seguidores: '980',
+  },
+];
+
+const animationVariants = {
+  initial: { scale: 0.95, opacity: 0 },
+  in: { scale: 1, opacity: 1 },
+  out: { scale: 0.95, opacity: 0 },
+};
+
+const animationTransition = { duration: 0.32, ease: 'easeInOut' };
+
+const profilePanelVariants = {
+  hidden: { x: '-100%' },
+  visible: { x: 0 },
+  exit: { x: '-100%' },
+};
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
   
-  // Verificar si el usuario está autenticado
+  useEffect(() => {
+    console.log('Usuario en Dashboard:', user);
+  }, [user]);
+
   useEffect(() => {
     if (!isAuthenticated()) {
-      // Redirigir a la página de login si no está autenticado
       window.location.href = '/auth';
     }
+    setHideHeaderFooter(true);
   }, [isAuthenticated]);
 
-  // Si no hay usuario, mostrar loading
   if (!user) {
-    return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner">Cargando...</div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
-    <div className="dashboard-container">
-      <Header />
-      <main className="dashboard-main">
-        <div className="dashboard-content">
-          <div className="dashboard-header">
-            <h1>¡Bienvenido a tu Dashboard, {user.nombre}!</h1>
-            <p className="dashboard-subtitle">
-              Tu huerta conectada está lista para crecer
-            </p>
-          </div>
-
-          <div className="dashboard-grid">
-            <div className="dashboard-card">
-              <div className="card-icon">🌱</div>
-              <h3>Mi Huerta</h3>
-              <p>Gestiona tus cultivos y plantas</p>
-              <button className="dashboard-btn">Ver Huerta</button>
-            </div>
-
-            <div className="dashboard-card">
-              <div className="card-icon">📊</div>
-              <h3>Estadísticas</h3>
-              <p>Mira el progreso de tu huerta</p>
-              <button className="dashboard-btn">Ver Estadísticas</button>
-            </div>
-
-            <div className="dashboard-card">
-              <div className="card-icon">📅</div>
-              <h3>Calendario</h3>
-              <p>Planifica tus actividades</p>
-              <button className="dashboard-btn">Ver Calendario</button>
-            </div>
-
-            <div className="dashboard-card">
-              <div className="card-icon">👥</div>
-              <h3>Comunidad</h3>
-              <p>Conecta con otros agricultores</p>
-              <button className="dashboard-btn">Ver Comunidad</button>
-            </div>
-          </div>
-
-          <div className="dashboard-info">
-            <div className="user-info-card">
-              <h3>Información de tu Cuenta</h3>
-              <div className="user-details">
-                <p><strong>Nombre:</strong> {user.nombre} {user.apellido}</p>
-                <p><strong>Email:</strong> {user.correo}</p>
-                <p><strong>Tipo de Usuario:</strong> {user.id_tipo_usuario === 4 ? 'Agricultor' : 'Usuario'}</p>
-              </div>
-              <button 
-                className="logout-btn" 
-                onClick={logout}
-              >
-                Cerrar Sesión
+    <motion.div
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={animationVariants}
+      transition={animationTransition}
+      style={{ minHeight: '80vh' }}
+    >
+      <div className="dashboard-wsp-container">
+        <Header hide={hideHeaderFooter} />
+        <div className="dashboard-wsp-main">
+          {/* Sidebar izquierda */}
+          <aside className="dashboard-wsp-sidebar">
+            <div className="sidebar-top-icons">
+              <button className="sidebar-home-btn" onClick={() => navigate('/')}
+                title="Volver al inicio">
+                <AiOutlineHome size={28} />
+              </button>
+              <button className="sidebar-user-btn" onClick={() => setShowProfile(true)} title="Perfil de usuario">
+                <FaUserCircle size={28} />
               </button>
             </div>
-          </div>
+            <div className="sidebar-header">
+              <h2>HuertaConecta</h2>
+              <input type="text" className="sidebar-search" placeholder="Buscar huerta..." />
+            </div>
+            <div className="sidebar-list">
+              {huertasEjemplo.map((huerta) => (
+                <div key={huerta.id} className="sidebar-channel">
+                  <div className="channel-avatar">{huerta.nombre.charAt(0)}</div>
+                  <div className="channel-info">
+                    <div className="channel-title">{huerta.nombre}</div>
+                    <div className="channel-desc">{huerta.descripcion}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="sidebar-suggest-title">Sugerencias para seguir</div>
+            <div className="sidebar-suggest-list">
+              {sugerencias.map((s) => (
+                <div key={s.id} className="sidebar-suggest-item">
+                  <span className="suggest-avatar">{s.nombre.charAt(0)}</span>
+                  <span className="suggest-name">{s.nombre}</span>
+                  <span className="suggest-followers">{s.seguidores} seguidores</span>
+                  <button className="suggest-btn">Seguir</button>
+                </div>
+              ))}
+            </div>
+            <button className="sidebar-discover-btn">Descubrir más</button>
+            <AnimatePresence>
+              {showProfile && (
+                <motion.div
+                  className="sidebar-profile-panel"
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={profilePanelVariants}
+                  transition={{ type: 'tween', duration: 0.32 }}
+                >
+                  <button className="profile-close-btn" onClick={() => setShowProfile(false)} title="Cerrar perfil">×</button>
+                  <div className="profile-avatar"><FaUserCircle size={48} /></div>
+                  <div className="profile-info">
+                    <div className="profile-name">{user.nombre} {user.apellido}</div>
+                    <div className="profile-email">{user.correo}</div>
+                  </div>
+                  <button className="profile-logout-btn" onClick={logout}>Cerrar sesión</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </aside>
+          {/* Panel principal */}
+          <main className="dashboard-wsp-panel">
+            <div className="panel-center">
+              <h1>Descubre huertas</h1>
+              <p className="panel-desc">
+                Explora, sigue y conecta con diferentes huertas. <br />
+                ¡Encuentra la inspiración para tu propio cultivo!
+              </p>
+            </div>
+          </main>
         </div>
-      </main>
-      <Footer />
-    </div>
+        <Footer hide={hideHeaderFooter} />
+      </div>
+    </motion.div>
   );
 };
 
