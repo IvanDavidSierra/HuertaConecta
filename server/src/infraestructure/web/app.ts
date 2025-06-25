@@ -3,6 +3,7 @@ import userRoutes from "../routes/UserRoutes";
 import tipoUserRoutes from "../routes/TipoUserRoutes";
 import huertasRouter  from "../routes/HuertasRoutes";
 import usuariosHuertasRoutes from "../routes/UsuariosHuertasRoutes";
+import publicacionesRoutes  from "../routes/PublicacionesRoutes";
 
 
 class App {
@@ -19,6 +20,7 @@ class App {
         this.app.use("/api", tipoUserRoutes);
         this.app.use("/api", huertasRouter);
         this.app.use("/api", usuariosHuertasRoutes);
+        this.app.use("/api", publicacionesRoutes);
     }
 
     private middleware():void{
