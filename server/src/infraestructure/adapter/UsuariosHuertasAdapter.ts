@@ -36,7 +36,7 @@ export class UsuariosHuertasAdapter implements UsuariosHuertasPort {
 
     private toEntity(usuariosHuertas: Omit<UsuariosHuertasDomain, "id_usuarios_huertas">): UsuariosHuertasEntities {
         const entity = new UsuariosHuertasEntities();
-        entity.id_usuarios = usuariosHuertas.id_usuario.id_usuario;
+        entity.id_usuario = usuariosHuertas.id_usuario.id_usuario;
         entity.id_huerta = usuariosHuertas.id_huerta.id_huerta;
         entity.fecha_vinculacion = usuariosHuertas.fecha_vinculacion;
         return entity;
@@ -53,7 +53,7 @@ export class UsuariosHuertasAdapter implements UsuariosHuertasPort {
         if (!existingEntity) return false;
 
         Object.assign(existingEntity, {
-            id_usuarios: usuariosHuertas.id_usuario?.id_usuario ?? existingEntity.id_usuarios,
+            id_usuario: usuariosHuertas.id_usuario?.id_usuario ?? existingEntity.id_usuario,
             id_huerta: usuariosHuertas.id_huerta?.id_huerta ?? existingEntity.id_huerta,
             fecha_vinculacion: usuariosHuertas.fecha_vinculacion ?? existingEntity.fecha_vinculacion
         });
@@ -84,7 +84,7 @@ export class UsuariosHuertasAdapter implements UsuariosHuertasPort {
 
     async getUsuariosHuertasByUserId(userId: number): Promise<UsuariosHuertasDomain[]> {
         const entities = await this.usuariosHuertasRepository.find({
-            where: { id_usuarios: userId },
+            where: { id_usuario: userId },
             relations: ['usuario', 'huerta']
         });
         return entities.map(entity => this.toDomain(entity));

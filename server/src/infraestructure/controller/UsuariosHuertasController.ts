@@ -22,14 +22,28 @@ export class UsuariosHuertasController {
                 return res.status(400).json({ error: "ID de huerta inválido" });
             }
 
-            if (!this.validateDate(fecha_vinculacion)) {
-                return res.status(400).json({ error: "Fecha de vinculación inválida" });
-            }
-
+            // Construir los objetos User y Huerta con solo los IDs
             const usuariosHuertas: Omit<UsuariosHuertas, "id_usuarios_huertas"> = {
-                id_usuario,
-                id_huerta,
-                fecha_vinculacion: new Date(fecha_vinculacion)
+                id_usuario: {
+                    id_usuario: parseInt(id_usuario),
+                    nombre: "",
+                    apellido: "",
+                    correo: "",
+                    contrasena: "",
+                    id_tipo_usuario: {
+                        id_tipo_usuario: 0,
+                        descripcion_tipo_usuario: ""
+                    },
+                    fecha_creacion: new Date()
+                },
+                id_huerta: {
+                    id_huerta: parseInt(id_huerta),
+                    nombre_huerta: "",
+                    direccion_huerta: "",
+                    descripcion: "",
+                    fecha_creacion: new Date()
+                },
+                fecha_vinculacion: fecha_vinculacion ? new Date(fecha_vinculacion) : new Date(),
             };
 
             const id = await this.app.createUsuariosHuertas(usuariosHuertas);
@@ -59,14 +73,31 @@ export class UsuariosHuertasController {
                 if (!this.validateId(id_usuario)) {
                     return res.status(400).json({ error: "ID de usuario inválido" });
                 }
-                updateData.id_usuario = id_usuario;
+                updateData.id_usuario = {
+                    id_usuario: parseInt(id_usuario),
+                    nombre: "",
+                    apellido: "",
+                    correo: "",
+                    contrasena: "",
+                    id_tipo_usuario: {
+                        id_tipo_usuario: 0,
+                        descripcion_tipo_usuario: ""
+                    },
+                    fecha_creacion: new Date()
+                };
             }
 
             if (id_huerta !== undefined) {
                 if (!this.validateId(id_huerta)) {
                     return res.status(400).json({ error: "ID de huerta inválido" });
                 }
-                updateData.id_huerta = id_huerta;
+                updateData.id_huerta = {
+                    id_huerta: parseInt(id_huerta),
+                    nombre_huerta: "",
+                    direccion_huerta: "",
+                    descripcion: "",
+                    fecha_creacion: new Date()
+                };
             }
 
             if (fecha_vinculacion !== undefined) {
