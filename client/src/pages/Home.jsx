@@ -1,10 +1,8 @@
 import React from 'react';
-import Header from '../components/layout/Header';
 import './Home.css';
 import logo from '../assets/huerta_conecta_logo.png';
 import video from '../assets/huerta_conecta_main_video.mp4';
 import FeatureSection from '../components/common/FeatureSection';
-import Footer from '../components/layout/Footer';
 import homeImageUno from '../assets/home-image-uno.jpg';
 import homeImageTwo from '../assets/home-image-two.jpg';
 import homeImageThree from '../assets/home-image-three.jpg';
@@ -18,7 +16,6 @@ const Home = () => {
       </video>
       <div className="home-overlay"/>
       <div className="home-content">
-        <Header />
         <main className="snap-container">
           <div className="snap-section">
             <section className="hero">
@@ -64,7 +61,6 @@ const Home = () => {
             />
           </div>
         </main>
-        <Footer />
       </div>
     </div>
   );
