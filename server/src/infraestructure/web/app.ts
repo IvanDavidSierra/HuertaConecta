@@ -1,7 +1,10 @@
 import express from "express";
 import userRoutes from "../routes/UserRoutes";
 import tipoUserRoutes from "../routes/TipoUserRoutes";
-import authRoutes from "../routes/AuthRoutes";
+
+import huertasRouter  from "../routes/HuertasRoutes";
+import usuariosHuertasRoutes from "../routes/UsuariosHuertasRoutes";
+
 
 
 class App {
@@ -16,7 +19,8 @@ class App {
         console.log("routes");
         this.app.use("/api", userRoutes);
         this.app.use("/api", tipoUserRoutes);
-        this.app.use("/api/auth", authRoutes);
+        this.app.use("/api", huertasRouter);
+        this.app.use("/api", usuariosHuertasRoutes);
     }
 
     private middleware():void{

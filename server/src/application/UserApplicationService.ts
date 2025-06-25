@@ -25,7 +25,7 @@ export class UserApplicationService{
         }
         if(user.correo){
             const emailTaken = await this.port.getUserByEmail(user.correo);
-            if(emailTaken && emailTaken.id !== id){
+            if(emailTaken && emailTaken.id_usuario !== id){
                 throw new Error('email is already taken by another user');
             }
         }
