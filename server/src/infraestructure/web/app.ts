@@ -6,7 +6,7 @@ import usuariosHuertasRoutes from "../routes/UsuariosHuertasRoutes";
 import publicacionesRoutes  from "../routes/PublicacionesRoutes";
 import estadosTareasRouter from "../routes/EstadosTareasRoutes";
 import cultivosRouter from "../routes/CultivosRoutes";
-
+import tareasRouter from "../routes/TareasRoutes";
 class App {
     private app: express.Application;
     constructor() {
@@ -24,6 +24,7 @@ class App {
         this.app.use("/api", publicacionesRoutes);
         this.app.use("/api", estadosTareasRouter);
         this.app.use("/api", cultivosRouter);
+        this.app.use("/api", tareasRouter);
     }
 
     private middleware():void{
