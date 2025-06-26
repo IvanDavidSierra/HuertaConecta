@@ -1,0 +1,29 @@
+.admin-summary-cards {
+  display: flex;
+  gap: 1.5rem;
+  margin: 2rem 0 2.5rem 0;
+}
+.admin-summary-cards .card {
+  flex: 1;
+  padding: 1.2rem 1rem;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  transition: transform 0.2s;
+}
+.admin-summary-cards .card b {
+  font-size: 1.5rem;
+  display: block;
+  margin-top: 0.5rem;
+}
+.card.blue { background: #2196f3; }
+.card.red { background: #e53935; }
+.card.green { background: #43a047; }
+.card.yellow { background: #ffd600; color: #333; }
+.card.purple { background: #8e24aa; }
+.admin-summary-cards .card:hover {
+  transform: translateY(-4px) scale(1.03);
+} 

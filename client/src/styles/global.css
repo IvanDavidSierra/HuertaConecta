@@ -12,7 +12,6 @@ body {
 
 main {
   flex: 1;
-  padding: var(--spacing-lg) 0;
 }
 
 /* Utilidades de texto */
