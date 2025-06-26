@@ -4,6 +4,7 @@ import tipoUserRoutes from "../routes/TipoUserRoutes";
 import huertasRouter  from "../routes/HuertasRoutes";
 import usuariosHuertasRoutes from "../routes/UsuariosHuertasRoutes";
 import publicacionesRoutes  from "../routes/PublicacionesRoutes";
+import estadosTareasRouter from "../routes/EstadosTareasRoutes";
 
 
 class App {
@@ -21,6 +22,7 @@ class App {
         this.app.use("/api", huertasRouter);
         this.app.use("/api", usuariosHuertasRoutes);
         this.app.use("/api", publicacionesRoutes);
+        this.app.use("/api", estadosTareasRouter);
     }
 
     private middleware():void{
