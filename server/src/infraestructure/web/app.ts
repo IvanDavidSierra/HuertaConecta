@@ -5,7 +5,7 @@ import huertasRouter  from "../routes/HuertasRoutes";
 import usuariosHuertasRoutes from "../routes/UsuariosHuertasRoutes";
 import publicacionesRoutes  from "../routes/PublicacionesRoutes";
 import estadosTareasRouter from "../routes/EstadosTareasRoutes";
-
+import cultivosRouter from "../routes/CultivosRoutes";
 
 class App {
     private app: express.Application;
@@ -23,6 +23,7 @@ class App {
         this.app.use("/api", usuariosHuertasRoutes);
         this.app.use("/api", publicacionesRoutes);
         this.app.use("/api", estadosTareasRouter);
+        this.app.use("/api", cultivosRouter);
     }
 
     private middleware():void{

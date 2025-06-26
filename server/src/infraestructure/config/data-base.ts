@@ -6,6 +6,7 @@ import { huertas } from "../entities/huertas";
 import { usuarios_huertas } from "../entities/usuarios_huertas";
 import { publicaciones } from "../entities/publicaciones";
 import { EstadoTareaEntity } from "../entities/estados_tareas";
+import { CultivosEntity } from "../entities/cultivos";
 
 dotenv.config();
 export const AppDataSource = new DataSource({
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
     database : process.env.DB_NAME,
     schema : process.env.DB_SCHEMA,
     logging : true,
-    entities: [usuarios, tipos_usuarios, huertas, usuarios_huertas, publicaciones,EstadoTareaEntity],
+    entities: [usuarios, tipos_usuarios, huertas, usuarios_huertas, publicaciones,EstadoTareaEntity,CultivosEntity],
 
 });
 
