@@ -256,17 +256,17 @@ const Dashboard = () => {
           contenido: tarea.titulo + ': ' + tarea.descripcion,
           fecha: tarea.fecha_creacion || tarea.fecha_inicio,
           avatar: (tarea.usuario_huerta?.id_usuario?.nombre?.[0] || '') + (tarea.usuario_huerta?.id_usuario?.apellido?.[0] || ''),
-          completada: tarea.estado_tarea?.descripcion_estado_tarea?.toLowerCase().includes('completada')
+          estado: tarea.estado_tarea?.descripcion_estado_tarea || 'Pendiente'
         }));
 
         // 3. Mapear publicaciones al formato de mensaje
         const publicacionesComoMensajes = publicaciones.map(pub => ({
           id: pub.id_publicacion,
           tipo: 'publicacion',
-          usuario: pub.usuario?.nombre + ' ' + pub.usuario?.apellido,
-          contenido: pub.contenido,
-          fecha: pub.fecha_creacion,
-          avatar: (pub.usuario?.nombre?.[0] || '') + (pub.usuario?.apellido?.[0] || '')
+          usuario: pub.id_usuarios_huertas?.id_usuario?.nombre + ' ' + pub.id_usuarios_huertas?.id_usuario?.apellido,
+          contenido: pub.contenido_post || pub.contenido,
+          fecha: pub.fecha_post || pub.fecha_creacion,
+          avatar: (pub.id_usuarios_huertas?.id_usuario?.nombre?.[0] || '') + (pub.id_usuarios_huertas?.id_usuario?.apellido?.[0] || '')
         }));
 
         // 4. Unir y ordenar por fecha
@@ -451,6 +451,7 @@ const Dashboard = () => {
         );
         if (relacionUsuarioHuerta) {
           const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+          console.log('Tareas tras actualizar tarea:', tareas);
           setTareasHuerta(tareas);
         }
       } else {
@@ -783,6 +784,7 @@ const Dashboard = () => {
         );
         if (relacionUsuarioHuerta) {
           const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+          console.log('Tareas tras actualizar estado:', tareas);
           setTareasHuerta(tareas);
         }
       } else {
@@ -952,9 +954,7 @@ const Dashboard = () => {
                               <span className="message-user">{mensaje.usuario}</span>
                               <span className="message-time">{formatearFecha(mensaje.fecha)}</span>
                               {mensaje.tipo === 'tarea' && (
-                                <span className={`task-status ${mensaje.completada ? 'completed' : 'pending'}`}>
-                                  {mensaje.completada ? '✓ Completada' : '⏳ Pendiente'}
-                                </span>
+                                <span className={`task-status estado-${mensaje.estado?.toLowerCase().replace(/\s/g, '-')}`}>{mensaje.estado}</span>
                               )}
                             </div>
                             <div className="message-text">

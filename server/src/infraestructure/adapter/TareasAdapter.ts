@@ -19,22 +19,22 @@ export class TareasAdapter implements TareasPort {
     if (!entity) return null;
     return {
       id_usuarios_huertas: entity.id_usuarios_huertas,
-      id_usuario: {
-        id_usuario: entity.id_usuario,
-        nombre: "",
-        apellido: "",
-        correo: "",
-        contrasena: "",
-        id_tipo_usuario: { id_tipo_usuario: 0, descripcion_tipo_usuario: "" },
-        fecha_creacion: new Date()
-      } as User,
-      id_huerta: {
-        id_huerta: entity.id_huerta,
-        nombre_huerta: "",
-        direccion_huerta: "",
-        descripcion: "",
-        fecha_creacion: new Date()
-      } as Huerta,
+      id_usuario: entity.usuario ? {
+        id_usuario: entity.usuario.id_usuario,
+        nombre: entity.usuario.nombre,
+        apellido: entity.usuario.apellido,
+        correo: entity.usuario.correo,
+        contrasena: entity.usuario.contrasena,
+        id_tipo_usuario: entity.usuario.tipo_usuario,
+        fecha_creacion: entity.usuario.fecha_creacion
+      } as User : null,
+      id_huerta: entity.huerta ? {
+        id_huerta: entity.huerta.id_huerta,
+        nombre_huerta: entity.huerta.nombre_huerta,
+        direccion_huerta: entity.huerta.direccion_huerta,
+        descripcion: entity.huerta.descripcion,
+        fecha_creacion: entity.huerta.fecha_creacion
+      } as Huerta : null,
       fecha_vinculacion: entity.fecha_vinculacion
     };
   }
@@ -78,7 +78,7 @@ export class TareasAdapter implements TareasPort {
       const savedTarea = await this.tareasRepository.save(tareaEntity);
       console.log('Tarea guardada:', savedTarea);
       // Cargar relaciones
-      const tareaWithRelations = await this.tareasRepository.findOne({ where: { id_tarea: savedTarea.id_tarea }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
+      const tareaWithRelations = await this.tareasRepository.findOne({ where: { id_tarea: savedTarea.id_tarea }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });
       return this.toDomain(tareaWithRelations!);
     } catch (error) {
       console.error("Error creating tarea", error);
@@ -88,7 +88,7 @@ export class TareasAdapter implements TareasPort {
 
   async getTareaById(id: number): Promise<Tarea | null> {
     try {
-      const tarea = await this.tareasRepository.findOne({ where: { id_tarea: id }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
+      const tarea = await this.tareasRepository.findOne({ where: { id_tarea: id }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });
       return tarea ? this.toDomain(tarea) : null;
     } catch (error) {
       console.error("Error fetching tarea by ID", error);
@@ -98,7 +98,7 @@ export class TareasAdapter implements TareasPort {
 
   async getTareaByTitulo(titulo: string): Promise<Tarea | null> {
     try {
-      const tarea = await this.tareasRepository.findOne({ where: { titulo_tarea: titulo }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
+      const tarea = await this.tareasRepository.findOne({ where: { titulo_tarea: titulo }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });
       return tarea ? this.toDomain(tarea) : null;
     } catch (error) {
       console.error("Error fetching tarea by title", error);
@@ -108,7 +108,7 @@ export class TareasAdapter implements TareasPort {
 
   async getTareasByUsuarioHuertaId(id_usuarios_huertas: number): Promise<Tarea[]> {
     try {
-      const tareas = await this.tareasRepository.find({ where: { id_usuarios_huertas }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
+      const tareas = await this.tareasRepository.find({ where: { id_usuarios_huertas }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });
       return tareas.map(t => this.toDomain(t));
     } catch (error) {
       console.error("Error fetching tareas by usuario huerta ID", error);
@@ -118,7 +118,7 @@ export class TareasAdapter implements TareasPort {
 
   async getAllTareas(): Promise<Tarea[]> {
     try {
-      const tareas = await this.tareasRepository.find({ relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
+      const tareas = await this.tareasRepository.find({ relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });
       return tareas.map(t => this.toDomain(t));
     } catch (error) {
       console.error("Error fetching all tareas", error);
@@ -167,7 +167,7 @@ export class TareasAdapter implements TareasPort {
       }
 
       await this.tareasRepository.update(id, updateData);
-      const updatedTarea = await this.tareasRepository.findOne({ where: { id_tarea: id }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
+      const updatedTarea = await this.tareasRepository.findOne({ where: { id_tarea: id }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });
       return updatedTarea ? this.toDomain(updatedTarea) : null;
     } catch (error) {
       console.error("Error updating tarea", error);
