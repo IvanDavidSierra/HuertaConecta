@@ -134,12 +134,11 @@ export class UserController{
 
   async updateUser(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
+      const { id_usuario, nombre, correo, contrasena, apellido, id_tipo_usuario, fecha_creacion } = req.body;
+      
+      if (!id_usuario || isNaN(parseInt(id_usuario))) {
         return res.status(400).json({ error: "ID de usuario no válido" });
       }
-
-      let { nombre, correo, contrasena, apellido, id_tipo_usuario, fecha_creacion } = req.body;
 
       // Validaciones con expresiones regulares
       if (nombre && !/^[a-zA-Z\s]{3,}$/.test(nombre.trim()))
@@ -161,7 +160,7 @@ export class UserController{
               "La contraseña debe tener al menos 6 caracteres, incluyendo al menos una letra y un número",
           });
 
-      const updated = await this.app.updateUser(id, {
+      const updated = await this.app.updateUser(parseInt(id_usuario), {
         nombre, 
         correo,
         contrasena,

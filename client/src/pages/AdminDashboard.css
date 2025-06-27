@@ -1,37 +1,38 @@
 .admin-dashboard {
   display: flex;
   min-height: 100vh;
-  background: #f4f6fa;
+  background: #222e35;
 }
 .admin-main {
   flex: 1;
   padding: 2rem 2.5rem;
-  background: #f4f6fa;
+  background: #222e35;
 }
 .admin-main h2 {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: #263544;
+  color: #ffffff;
 }
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: #222e35;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   margin-bottom: 2rem;
   overflow: hidden;
+  color: #ffffff;
 }
 .admin-table th, .admin-table td {
   padding: 0.9rem 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid#222e35;
   text-align: left;
 }
 .admin-table th {
-  background: #f7f7f7;
+  background: #222e35;
   font-weight: 600;
-  color: #263544;
+  color: #ffffff;
 }
 .admin-table tr:last-child td {
   border-bottom: none;
@@ -66,6 +67,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  color: #ffffff;
 }
 .new-btn {
   background: #43a047;

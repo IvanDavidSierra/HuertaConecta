@@ -14,8 +14,8 @@ export class HuertaAdapter implements HuertasPort {
         return {
             id_huerta: huerta.id_huerta,
             nombre_huerta: huerta.nombre_huerta,
-            direccion_huerta: huerta.descripcion,
-            descripcion: huerta.direccion_huerta,
+            direccion_huerta: huerta.direccion_huerta,
+            descripcion: huerta.descripcion,
             fecha_creacion: huerta.fecha_creacion
         };
     }
@@ -62,7 +62,7 @@ export class HuertaAdapter implements HuertasPort {
         try {
             const existingHuerta = await this.huertaRepository.findOne({ where:{id_huerta: id} });
             if(!existingHuerta) return false;
-            await this.huertaRepository.save(existingHuerta);
+            await this.huertaRepository.delete({ id_huerta: id });
             return true;
         } catch (e) {
             console.error("Error deleting huerta", e);

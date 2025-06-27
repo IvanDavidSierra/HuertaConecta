@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import Modal from '../../common/Modal';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import UserForm from '../forms/UserForm';
+import Loader from '../../common/Loader';
 import '../forms/UserForm.css';
 
-const UsersTable = ({ users, onCreate, onEdit, onDelete }) => {
+const UsersTable = ({ usuarios = [], onCreate, onEdit, onDelete, loading = false }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, user: null });
@@ -34,19 +35,32 @@ const UsersTable = ({ users, onCreate, onEdit, onDelete }) => {
 
   const handleConfirmDelete = () => {
     if (confirmDelete.user && onDelete) {
-      onDelete(confirmDelete.user.id);
+      onDelete(confirmDelete.user.id_usuario);
     }
     handleCloseConfirm();
   };
 
   const handleSubmit = (formData) => {
     if (editUser) {
-      onEdit({ ...editUser, ...formData });
+      onEdit({ ...formData, id_usuario: editUser.id_usuario });
     } else {
       onCreate(formData);
     }
     handleClose();
   };
+
+  if (loading) {
+    return (
+      <div className="admin-table-wrapper">
+        <div className="admin-table-header">
+          <h3>Usuarios</h3>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <Loader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-table-wrapper">
@@ -62,32 +76,33 @@ const UsersTable = ({ users, onCreate, onEdit, onDelete }) => {
             <th>Apellido</th>
             <th>Correo</th>
             <th>Tipo</th>
+            <th>Fecha Creación</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Juan</td>
-            <td>Pérez</td>
-            <td>juan@correo.com</td>
-            <td>Administrador</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ id: 1, name: 'Juan', lastName: 'Pérez', email: 'juan@correo.com', type: 'Administrador' })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ id: 1, name: 'Juan', lastName: 'Pérez' })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>María</td>
-            <td>García</td>
-            <td>maria@correo.com</td>
-            <td>Usuario</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ id: 2, name: 'María', lastName: 'García', email: 'maria@correo.com', type: 'Usuario' })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ id: 2, name: 'María', lastName: 'García' })}>Eliminar</button>
-            </td>
-          </tr>
+          {usuarios.length === 0 ? (
+            <tr>
+              <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                No hay usuarios registrados
+              </td>
+            </tr>
+          ) : (
+            usuarios.map((user) => (
+              <tr key={user.id_usuario}>
+                <td>{user.id_usuario}</td>
+                <td>{user.nombre}</td>
+                <td>{user.apellido}</td>
+                <td>{user.correo}</td>
+                <td>{user.id_tipo_usuario?.descripcion_tipo_usuario || 'Sin tipo'}</td>
+                <td>{new Date(user.fecha_creacion).toLocaleDateString('es-ES')}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEdit(user)}>Editar</button>
+                  <button className="delete-btn" onClick={() => handleDelete(user)}>Eliminar</button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
       
@@ -106,7 +121,7 @@ const UsersTable = ({ users, onCreate, onEdit, onDelete }) => {
         onConfirm={handleConfirmDelete}
         title="Eliminar Usuario"
         message="¿Estás seguro de que quieres eliminar este usuario?"
-        itemName={confirmDelete.user ? `${confirmDelete.user.name} ${confirmDelete.user.lastName}` : ''}
+        itemName={confirmDelete.user ? `${confirmDelete.user.nombre} ${confirmDelete.user.apellido}` : ''}
       />
     </div>
   );

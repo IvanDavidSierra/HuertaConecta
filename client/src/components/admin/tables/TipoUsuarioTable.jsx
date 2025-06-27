@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import Modal from '../../common/Modal';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import TipoUserForm from '../forms/TipoUserForm';
+import Loader from '../../common/Loader';
 import '../forms/UserForm.css';
 
-const TipoUsuarioTable = ({ tiposUsuario, onCreate, onEdit, onDelete }) => {
+const TipoUsuarioTable = ({ tiposUsuario = [], onCreate, onEdit, onDelete, loading = false }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTipo, setEditTipo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, tipo: null });
@@ -34,7 +35,7 @@ const TipoUsuarioTable = ({ tiposUsuario, onCreate, onEdit, onDelete }) => {
 
   const handleConfirmDelete = () => {
     if (confirmDelete.tipo && onDelete) {
-      onDelete(confirmDelete.tipo.id);
+      onDelete(confirmDelete.tipo.id_tipo_usuario);
     }
     handleCloseConfirm();
   };
@@ -47,6 +48,19 @@ const TipoUsuarioTable = ({ tiposUsuario, onCreate, onEdit, onDelete }) => {
     }
     handleClose();
   };
+
+  if (loading) {
+    return (
+      <div className="admin-table-wrapper">
+        <div className="admin-table-header">
+          <h3>Tipos de Usuario</h3>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <Loader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-table-wrapper">
@@ -63,38 +77,24 @@ const TipoUsuarioTable = ({ tiposUsuario, onCreate, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Administrador</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ id: 1, descripcion: 'Administrador' })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ id: 1, descripcion: 'Administrador' })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Propietario</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ id: 2, descripcion: 'Propietario' })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ id: 2, descripcion: 'Propietario' })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Miembro</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ id: 3, descripcion: 'Miembro' })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ id: 3, descripcion: 'Miembro' })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>Usuario</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ id: 4, descripcion: 'Usuario' })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ id: 4, descripcion: 'Usuario' })}>Eliminar</button>
-            </td>
-          </tr>
+          {tiposUsuario.length === 0 ? (
+            <tr>
+              <td colSpan="3" style={{ textAlign: 'center', padding: '2rem' }}>
+                No hay tipos de usuario registrados
+              </td>
+            </tr>
+          ) : (
+            tiposUsuario.map((tipo) => (
+              <tr key={tipo.id_tipo_usuario}>
+                <td>{tipo.id_tipo_usuario}</td>
+                <td>{tipo.descripcion_tipo_usuario}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEdit(tipo)}>Editar</button>
+                  <button className="delete-btn" onClick={() => handleDelete(tipo)}>Eliminar</button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
       
@@ -113,7 +113,7 @@ const TipoUsuarioTable = ({ tiposUsuario, onCreate, onEdit, onDelete }) => {
         onConfirm={handleConfirmDelete}
         title="Eliminar Tipo de Usuario"
         message="¿Estás seguro de que quieres eliminar este tipo de usuario?"
-        itemName={confirmDelete.tipo ? confirmDelete.tipo.descripcion : ''}
+        itemName={confirmDelete.tipo ? confirmDelete.tipo.descripcion_tipo_usuario : ''}
       />
     </div>
   );

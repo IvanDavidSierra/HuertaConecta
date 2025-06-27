@@ -35,4 +35,10 @@ export class PublicacionesApplicationService {
     async getPublicacionByTitle(publicacion: string): Promise<Publicacion | null> {
         return await this.port.getPublicacionByTitle(publicacion);
     }
+
+    async getPublicacionesByHuertaId(id_huerta: number): Promise<Publicacion[]> {
+        // Llama al método del adaptador
+        // @ts-ignore
+        return await this.port.getPublicacionesByHuertaId(id_huerta);
+    }
 } 

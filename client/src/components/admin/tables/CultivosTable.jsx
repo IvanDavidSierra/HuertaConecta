@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import Modal from '../../common/Modal';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import CultivoForm from '../forms/CultivoForm';
+import Loader from '../../common/Loader';
 import '../forms/UserForm.css';
 
-const CultivosTable = ({ cultivos, onCreate, onEdit, onDelete }) => {
+const CultivosTable = ({ cultivos = [], onCreate, onEdit, onDelete, loading = false }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editCultivo, setEditCultivo] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, cultivo: null });
@@ -34,19 +35,26 @@ const CultivosTable = ({ cultivos, onCreate, onEdit, onDelete }) => {
 
   const handleConfirmDelete = () => {
     if (confirmDelete.cultivo && onDelete) {
-      onDelete(confirmDelete.cultivo.id);
+      onDelete(confirmDelete.cultivo.id_cultivo);
     }
     handleCloseConfirm();
   };
 
   const handleSubmit = (formData) => {
     if (editCultivo) {
-      onEdit({ ...editCultivo, ...formData });
+      onEdit(editCultivo.id_cultivo, { ...editCultivo, ...formData });
     } else {
       onCreate(formData);
     }
     handleClose();
   };
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  // Ordenar cultivos por ID para mantener consistencia
+  const sortedCultivos = [...cultivos].sort((a, b) => (a.id_cultivo || 0) - (b.id_cultivo || 0));
 
   return (
     <div className="admin-table-wrapper">
@@ -64,54 +72,29 @@ const CultivosTable = ({ cultivos, onCreate, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Tomate Cherry</td>
-            <td>Variedad de tomate pequeño y dulce</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ 
-                id: 1, 
-                titulo: 'Tomate Cherry', 
-                descripcion: 'Variedad de tomate pequeño y dulce' 
-              })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ 
-                id: 1, 
-                titulo: 'Tomate Cherry' 
-              })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Lechuga Romana</td>
-            <td>Lechuga de hojas largas y crujientes</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ 
-                id: 2, 
-                titulo: 'Lechuga Romana', 
-                descripcion: 'Lechuga de hojas largas y crujientes' 
-              })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ 
-                id: 2, 
-                titulo: 'Lechuga Romana' 
-              })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Zanahoria Naranja</td>
-            <td>Zanahoria tradicional de color naranja</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ 
-                id: 3, 
-                titulo: 'Zanahoria Naranja', 
-                descripcion: 'Zanahoria tradicional de color naranja' 
-              })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ 
-                id: 3, 
-                titulo: 'Zanahoria Naranja' 
-              })}>Eliminar</button>
-            </td>
-          </tr>
+          {sortedCultivos.length === 0 ? (
+            <tr>
+              <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
+                No hay cultivos registrados
+              </td>
+            </tr>
+          ) : (
+            sortedCultivos.map((cultivo) => (
+              <tr key={cultivo.id_cultivo}>
+                <td>{cultivo.id_cultivo}</td>
+                <td>{cultivo.titulo}</td>
+                <td>{cultivo.descripcion}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEdit(cultivo)}>
+                    Editar
+                  </button>
+                  <button className="delete-btn" onClick={() => handleDelete(cultivo)}>
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
       

@@ -133,4 +133,17 @@ export class PublicacionesController {
             return res.status(500).json({ error: "Error interno del servidor" });
         }
     }
+
+    async getPublicacionesByHuertaId(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const publicaciones = await this.app.getPublicacionesByHuertaId(Number(id));
+            return res.status(200).json(publicaciones);
+        } catch (error) {
+            if (error instanceof Error) {
+                return res.status(500).json({ error: "Error interno del servidor", details: error.message });
+            }
+            return res.status(500).json({ error: "Error interno del servidor" });
+        }
+    }
 } 

@@ -34,11 +34,12 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  register: (userData: RegisterData) => Promise<RegisterResult>;
+  register: (userData: RegisterData, options?: { admin?: boolean }) => Promise<RegisterResult>;
   login: (loginData: LoginData, options: LoginOptions) => Promise<RegisterResult>;
   logout: () => void;
   isAuthenticated: () => boolean;
   getAuthHeaders: () => { [key: string]: string };
+  updateUser: (userData: Partial<User>) => Promise<{ success: boolean; data?: any; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Función para registrar usuario
-  const register = async (userData: RegisterData): Promise<RegisterResult> => {
+  const register = async (userData: RegisterData, options?: { admin?: boolean }): Promise<RegisterResult> => {
     try {
       console.log('🚀 Iniciando registro con datos:', { ...userData, contrasena: '[HIDDEN]' });
       
@@ -86,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
         body: JSON.stringify({
           ...userData,
-          id_tipo_usuario: 4 // Asignar tipo de usuario 4 automáticamente
+          id_tipo_usuario: userData.id_tipo_usuario || 4 // Usa el que viene, o 4 por defecto
         }),
       });
 
@@ -97,14 +98,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(data.message || 'Error en el registro');
       }
 
-      // Guardar token y usuario en sessionStorage
-      console.log('💾 Guardando datos de sesión en sessionStorage...');
-      setToken(data.token);
-      setUser(data.user);
-      
-      // Guardar en sessionStorage
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('user', JSON.stringify(data.user));
+      if (!options?.admin) {
+        // Guardar token y usuario solo si NO es admin
+        console.log('💾 Guardando datos de sesión en sessionStorage...');
+        setToken(data.token);
+        setUser(data.user);
+        sessionStorage.setItem('token', data.token);
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+      }
 
       console.log('✅ Registro completado exitosamente');
       return { success: true, data };
@@ -175,6 +176,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   };
 
+  // Función para actualizar el usuario
+  const updateUser = async (userData: Partial<User>): Promise<{ success: boolean; data?: any; error?: string }> => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al actualizar el usuario');
+      }
+
+      // Actualizar el usuario en el estado local
+      if (data.user) {
+        setUser(data.user);
+        // Actualizar también en el almacenamiento
+        const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
+        storage.setItem('user', JSON.stringify(data.user));
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('❌ Error al actualizar el usuario:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Error desconocido' 
+      };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -184,6 +220,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isAuthenticated,
     getAuthHeaders,
+    updateUser,
   };
 
   return (

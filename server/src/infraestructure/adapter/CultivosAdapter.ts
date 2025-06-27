@@ -60,7 +60,11 @@ export class CultivosAdapter implements CultivosPort {
 
   async getAllCultivos(): Promise<Cultivo[]> {
     try{
-      const cultivos = await this.cultivosRepository.find();
+      const cultivos = await this.cultivosRepository.find({
+        order: {
+          id_cultivo: 'ASC'
+        }
+      });
       return cultivos.map(cultivo => this.toDomain(cultivo));
     }catch (error) {
       console.error("Error fetching all cultivos", error);

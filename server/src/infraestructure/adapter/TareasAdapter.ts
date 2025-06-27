@@ -53,33 +53,36 @@ export class TareasAdapter implements TareasPort {
     };
   }
 
-  private toEntity(tarea: Omit<Tarea, 'id_tarea'>): TareasEntity {
+  private toEntity(tarea: any): TareasEntity {
     const tareaEntity = new TareasEntity();
-    tareaEntity.titulo_tarea = tarea.titulo_tarea;
-    tareaEntity.descripcion_tarea = tarea.descripcion_tarea;
-    tareaEntity.fecha_inicio_tarea = tarea.fecha_inicio_tarea;
-    tareaEntity.fecha_fin_tarea = tarea.fecha_fin_tarea;
-    tareaEntity.id_estado_tarea = typeof tarea.estado_tarea === 'object' ? tarea.estado_tarea.id_estado_tarea : tarea.estado_tarea;
-    tareaEntity.id_cultivo = typeof tarea.cultivo === 'object' ? tarea.cultivo.id_cultivo : tarea.cultivo;
-    tareaEntity.fecha_creacion = tarea.fecha_creacion;
-    if (tarea.usuario_huerta !== null && tarea.usuario_huerta !== undefined) {
-      tareaEntity.id_usuarios_huertas = typeof tarea.usuario_huerta === 'object'
-        ? tarea.usuario_huerta.id_usuarios_huertas
-        : tarea.usuario_huerta;
-    }
+    tareaEntity.titulo_tarea = tarea.titulo || tarea.titulo_tarea;
+    tareaEntity.descripcion_tarea = tarea.descripcion || tarea.descripcion_tarea;
+    tareaEntity.fecha_inicio_tarea = tarea.fecha_inicio || tarea.fecha_inicio_tarea;
+    tareaEntity.fecha_fin_tarea = tarea.fecha_fin || tarea.fecha_fin_tarea;
+
+    // Acepta ambos nombres de campo para los IDs
+    tareaEntity.id_estado_tarea = tarea.id_estado_tarea ?? (typeof tarea.estado_tarea === 'object' ? tarea.estado_tarea.id_estado_tarea : tarea.estado_tarea);
+    tareaEntity.id_cultivo = tarea.id_cultivo ?? (typeof tarea.cultivo === 'object' ? tarea.cultivo.id_cultivo : tarea.cultivo);
+    tareaEntity.id_usuarios_huertas = tarea.id_usuarios_huertas ?? (typeof tarea.usuario_huerta === 'object' ? tarea.usuario_huerta.id_usuarios_huertas : tarea.usuario_huerta);
+
+    tareaEntity.fecha_creacion = tarea.fecha_creacion || new Date();
+
     return tareaEntity;
   }
 
   async createTarea(tarea: Omit<Tarea, 'id_tarea'>): Promise<Tarea> {
     try {
+      console.log('Datos recibidos en adaptador:', tarea);
       const tareaEntity = this.toEntity(tarea);
+      console.log('Entidad creada:', tareaEntity);
       const savedTarea = await this.tareasRepository.save(tareaEntity);
+      console.log('Tarea guardada:', savedTarea);
       // Cargar relaciones
       const tareaWithRelations = await this.tareasRepository.findOne({ where: { id_tarea: savedTarea.id_tarea }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
       return this.toDomain(tareaWithRelations!);
     } catch (error) {
       console.error("Error creating tarea", error);
-      throw new Error("Failed to create tarea");
+      throw new Error(`Failed to create tarea: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   }
 
@@ -127,18 +130,42 @@ export class TareasAdapter implements TareasPort {
     try {
       // Solo actualiza los campos primitivos y los IDs de las relaciones
       const updateData: any = {};
-      if (tarea.titulo_tarea !== undefined) updateData.titulo_tarea = tarea.titulo_tarea;
-      if (tarea.descripcion_tarea !== undefined) updateData.descripcion_tarea = tarea.descripcion_tarea;
-      if (tarea.fecha_inicio_tarea !== undefined) updateData.fecha_inicio_tarea = tarea.fecha_inicio_tarea;
-      if (tarea.fecha_fin_tarea !== undefined) updateData.fecha_fin_tarea = tarea.fecha_fin_tarea;
-      if (tarea.estado_tarea !== undefined) updateData.id_estado_tarea = tarea.estado_tarea.id_estado_tarea;
-      if (tarea.cultivo !== undefined) updateData.id_cultivo = tarea.cultivo.id_cultivo;
-      if (tarea.fecha_creacion !== undefined) updateData.fecha_creacion = tarea.fecha_creacion;
-      if (tarea.usuario_huerta !== undefined && tarea.usuario_huerta !== null) {
+      if (tarea.titulo_tarea !== undefined || tarea.titulo !== undefined) updateData.titulo_tarea = tarea.titulo_tarea ?? tarea.titulo;
+      if (tarea.descripcion_tarea !== undefined || tarea.descripcion !== undefined) updateData.descripcion_tarea = tarea.descripcion_tarea ?? tarea.descripcion;
+      if (tarea.fecha_inicio_tarea !== undefined || tarea.fecha_inicio !== undefined) updateData.fecha_inicio_tarea = tarea.fecha_inicio_tarea ?? tarea.fecha_inicio;
+      if (tarea.fecha_fin_tarea !== undefined || tarea.fecha_fin !== undefined) updateData.fecha_fin_tarea = tarea.fecha_fin_tarea ?? tarea.fecha_fin;
+
+      // Estado tarea
+      if (tarea.id_estado_tarea !== undefined) {
+        updateData.id_estado_tarea = tarea.id_estado_tarea;
+      } else if (tarea.estado_tarea !== undefined) {
+        updateData.id_estado_tarea = typeof tarea.estado_tarea === 'object'
+          ? tarea.estado_tarea.id_estado_tarea
+          : tarea.estado_tarea;
+      }
+      // Cultivo
+      if (tarea.id_cultivo !== undefined) {
+        updateData.id_cultivo = tarea.id_cultivo;
+      } else if (tarea.cultivo !== undefined) {
+        updateData.id_cultivo = typeof tarea.cultivo === 'object'
+          ? tarea.cultivo.id_cultivo
+          : tarea.cultivo;
+      }
+      // Usuario huerta
+      if (tarea.id_usuarios_huertas !== undefined) {
+        updateData.id_usuarios_huertas = tarea.id_usuarios_huertas;
+      } else if (tarea.usuario_huerta !== undefined && tarea.usuario_huerta !== null) {
         updateData.id_usuarios_huertas = typeof tarea.usuario_huerta === 'object'
           ? tarea.usuario_huerta.id_usuarios_huertas
           : tarea.usuario_huerta;
       }
+      if (tarea.fecha_creacion !== undefined) updateData.fecha_creacion = tarea.fecha_creacion;
+
+      // Evitar update vacío
+      if (Object.keys(updateData).length === 0) {
+        throw new Error('No se proporcionaron datos para actualizar la tarea');
+      }
+
       await this.tareasRepository.update(id, updateData);
       const updatedTarea = await this.tareasRepository.findOne({ where: { id_tarea: id }, relations: ['estado_tarea', 'cultivo', 'usuario_huerta'] });
       return updatedTarea ? this.toDomain(updatedTarea) : null;

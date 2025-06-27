@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
+import { useHuerta } from '../context/HuertaContext.tsx';
+import { useUsuariosHuertas } from '../context/UsuariosHuertasContext.tsx';
+import { useTipoUsuario } from '../context/TipoUsuarioContext.tsx';
+import { useTarea } from '../context/TareaContext.tsx';
+import { useCultivo } from '../context/CultivoContext';
+import { useToast } from '../context/ToastContext.tsx';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import { AiOutlineHome, AiOutlineSend, AiOutlineCheckSquare } from 'react-icons/ai';
@@ -152,7 +158,13 @@ const modalVariants = {
 };
 
 const Dashboard = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateUser } = useAuth();
+  const { huertas, loading: huertasLoading, error: huertasError, fetchHuertas, createHuerta } = useHuerta();
+  const { fetchUsuariosHuertas, fetchUsuariosHuertasByUserId } = useUsuariosHuertas();
+  const { tiposUsuario } = useTipoUsuario();
+  const { tareas, estadosTareas, loading: tareasLoading, createTarea, updateTarea, deleteTarea, fetchTareasByUsuarioHuerta, updateEstadoTarea } = useTarea();
+  const { cultivos } = useCultivo();
+  const { showToast } = useToast();
   const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [huertaSeleccionada, setHuertaSeleccionada] = useState(null);
@@ -170,18 +182,29 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const textareaRef = useRef(null);
   const [showCrearTarea, setShowCrearTarea] = useState(false);
-  const [nuevaTarea, setNuevaTarea] = useState({ tarea: '', descripcion: '', asignado: miembrosEjemplo[0]?.nombre || '', cultivo: 'Tomate cherry' });
+  const [nuevaTarea, setNuevaTarea] = useState({ 
+    titulo: '', 
+    descripcion: '', 
+    fecha_inicio: new Date().toISOString().split('T')[0],
+    fecha_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    id_estado_tarea: 1, // Pendiente por defecto
+    id_cultivo: 1,
+    id_usuarios_huertas: 0
+  });
   const [showDiscoverPanel, setShowDiscoverPanel] = useState(false);
   const [showCrearHuerta, setShowCrearHuerta] = useState(false);
   const [nuevaHuerta, setNuevaHuerta] = useState({ nombre: '', descripcion: '', direccion: '' });
-  const huertasDisponibles = [
-    { id: 1, nombre: 'Huerta El Paraíso', descripcion: 'Huerta orgánica con variedad de cultivos' },
-    { id: 2, nombre: 'Huerta Verde', descripcion: 'Especializada en hortalizas' },
-    { id: 3, nombre: 'Huerta Urbana', descripcion: 'Huerta en la ciudad con cultivos verticales' },
-    { id: 4, nombre: 'EcoHuerta', descripcion: 'Huerta ecológica y sostenible' },
-    { id: 5, nombre: 'Huerta Familiar', descripcion: 'Huerta para toda la familia' },
-  ];
+  const [creandoHuerta, setCreandoHuerta] = useState(false);
+  const [misHuertas, setMisHuertas] = useState([]);
+  const [loadingMisHuertas, setLoadingMisHuertas] = useState(false);
+  const [huertaErrors, setHuertaErrors] = useState({});
+  const [miembrosHuerta, setMiembrosHuerta] = useState([]);
+  const [loadingMiembros, setLoadingMiembros] = useState(false);
+  const [tareasHuerta, setTareasHuerta] = useState([]);
+  const [loadingTareas, setLoadingTareas] = useState(false);
   
+  console.log('huertaSeleccionada (detallado):', huertaSeleccionada, typeof huertaSeleccionada);
+
   useEffect(() => {
     console.log('Usuario en Dashboard:', user);
   }, [user]);
@@ -193,12 +216,70 @@ const Dashboard = () => {
     setHideHeaderFooter(true);
   }, [isAuthenticated]);
 
+  // Cargar las huertas del usuario actual
+  useEffect(() => {
+    const cargarMisHuertas = async () => {
+      if (user && user.id_usuario) {
+        setLoadingMisHuertas(true);
+        try {
+          const huertasUsuario = await fetchUsuariosHuertasByUserId(user.id_usuario);
+          setMisHuertas(huertasUsuario);
+        } catch (error) {
+          console.error('Error al cargar mis huertas:', error);
+        } finally {
+          setLoadingMisHuertas(false);
+        }
+      }
+    };
+
+    cargarMisHuertas();
+  }, [user, fetchUsuariosHuertasByUserId]);
+
   // Cargar mensajes cuando se selecciona una huerta
   useEffect(() => {
-    if (huertaSeleccionada) {
-      setMensajes(mensajesEjemplo[huertaSeleccionada.id] || []);
-    }
-  }, [huertaSeleccionada]);
+    const cargarFeed = async () => {
+      if (huertaSeleccionada) {
+        // 1. Cargar publicaciones reales de la huerta
+        let publicaciones = [];
+        try {
+          const resPub = await fetch(`/api/publicaciones/huerta/${huertaSeleccionada.id_huerta}`);
+          publicaciones = await resPub.json();
+        } catch (e) {
+          publicaciones = [];
+        }
+
+        // 2. Mapear tareas al formato de mensaje
+        const tareasComoMensajes = tareasHuerta.map(tarea => ({
+          id: tarea.id_tarea,
+          tipo: 'tarea',
+          usuario: tarea.usuario_huerta?.id_usuario?.nombre + ' ' + tarea.usuario_huerta?.id_usuario?.apellido,
+          contenido: tarea.titulo + ': ' + tarea.descripcion,
+          fecha: tarea.fecha_creacion || tarea.fecha_inicio,
+          avatar: (tarea.usuario_huerta?.id_usuario?.nombre?.[0] || '') + (tarea.usuario_huerta?.id_usuario?.apellido?.[0] || ''),
+          completada: tarea.estado_tarea?.descripcion_estado_tarea?.toLowerCase().includes('completada')
+        }));
+
+        // 3. Mapear publicaciones al formato de mensaje
+        const publicacionesComoMensajes = publicaciones.map(pub => ({
+          id: pub.id_publicacion,
+          tipo: 'publicacion',
+          usuario: pub.usuario?.nombre + ' ' + pub.usuario?.apellido,
+          contenido: pub.contenido,
+          fecha: pub.fecha_creacion,
+          avatar: (pub.usuario?.nombre?.[0] || '') + (pub.usuario?.apellido?.[0] || '')
+        }));
+
+        // 4. Unir y ordenar por fecha
+        const feed = [...tareasComoMensajes, ...publicacionesComoMensajes].sort(
+          (a, b) => new Date(b.fecha) - new Date(a.fecha)
+        );
+
+        setMensajes(feed);
+      }
+    };
+
+    cargarFeed();
+  }, [huertaSeleccionada, tareasHuerta]);
 
   useEffect(() => {
     if (editandoTarea && textareaRef.current) {
@@ -207,8 +288,75 @@ const Dashboard = () => {
     }
   }, [editandoTarea, tareaEdit.descripcion]);
 
+  // Cuando se abre el panel de información, obtener los miembros reales de la huerta
+  useEffect(() => {
+    const fetchMiembrosHuerta = async () => {
+      if (showInfoPanel && huertaSeleccionada?.id_huerta) {
+        setLoadingMiembros(true);
+        try {
+          const res = await fetch(`/api/usuarios-huertas/huerta/${huertaSeleccionada.id_huerta}`);
+          const data = await res.json();
+          console.log('Miembros de la huerta:', data);
+          if (Array.isArray(data)) {
+            setMiembrosHuerta(data);
+          } else {
+            setMiembrosHuerta([]);
+          }
+        } catch (error) {
+          console.error('Error al obtener miembros de la huerta:', error);
+          setMiembrosHuerta([]);
+        } finally {
+          setLoadingMiembros(false);
+        }
+      }
+    };
+    fetchMiembrosHuerta();
+  }, [showInfoPanel, huertaSeleccionada]);
+
+  // Cargar tareas de la huerta cuando se selecciona
+  useEffect(() => {
+    const fetchTareasHuerta = async () => {
+      if (huertaSeleccionada?.id_huerta) {
+        setLoadingTareas(true);
+        try {
+          // Obtener la relación usuario-huerta para el usuario actual
+          const relacionUsuarioHuerta = misHuertas.find(
+            h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+          );
+          
+          if (relacionUsuarioHuerta) {
+            const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+            setTareasHuerta(tareas);
+          } else {
+            setTareasHuerta([]);
+          }
+        } catch (error) {
+          console.error('Error al obtener tareas de la huerta:', error);
+          setTareasHuerta([]);
+        } finally {
+          setLoadingTareas(false);
+        }
+      }
+    };
+    fetchTareasHuerta();
+  }, [huertaSeleccionada, misHuertas, fetchTareasByUsuarioHuerta]);
+
+  // Función para verificar si el usuario es propietario de la huerta seleccionada
+  const esPropietarioDeHuerta = () => {
+    if (!user || !huertaSeleccionada) return false;
+    
+    const relacionUsuarioHuerta = misHuertas.find(
+      h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+    );
+    
+    return relacionUsuarioHuerta?.id_usuario?.id_tipo_usuario?.descripcion_tipo_usuario?.toLowerCase().includes('propietario');
+  };
+
   const handleHuertaClick = (huerta) => {
-    setHuertaSeleccionada(huerta);
+    // Si viene de usuarios_huertas, extrae el objeto huerta
+    const huertaObj = huerta.id_huerta ? huerta : (huerta.id_huerta ? huerta.id_huerta : huerta);
+    setHuertaSeleccionada(huertaObj);
+    setShowDiscoverPanel(false);
     setShowOpciones(false);
   };
 
@@ -270,10 +418,12 @@ const Dashboard = () => {
 
   const handleEditarTarea = () => {
     setTareaEdit({
-      tarea: tareaSeleccionada.tarea,
+      titulo: tareaSeleccionada.titulo,
       descripcion: tareaSeleccionada.descripcion,
-      asignado: tareaSeleccionada.asignado,
-      cultivo: tareaSeleccionada.cultivo || 'Tomate cherry',
+      fecha_inicio: tareaSeleccionada.fecha_inicio.split('T')[0],
+      fecha_fin: tareaSeleccionada.fecha_fin.split('T')[0],
+      id_estado_tarea: tareaSeleccionada.id_estado_tarea,
+      id_cultivo: tareaSeleccionada.id_cultivo,
     });
     setEditandoTarea(true);
   };
@@ -282,21 +432,64 @@ const Dashboard = () => {
     setEditandoTarea(false);
   };
 
-  const handleGuardarEdicion = () => {
-    // Aquí podrías actualizar el estado global o hacer una petición al backend
-    setEditandoTarea(false);
-    setTareaSeleccionada({ ...tareaSeleccionada, ...tareaEdit });
+  const handleGuardarEdicion = async () => {
+    if (!tareaEdit.titulo?.trim() || !tareaEdit.descripcion?.trim()) {
+      showToast('Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    try {
+      const result = await updateTarea(tareaSeleccionada.id_tarea, tareaEdit);
+      
+      if (result.success) {
+        showToast('Tarea actualizada exitosamente', 'success');
+        setEditandoTarea(false);
+        setTareaSeleccionada({ ...tareaSeleccionada, ...tareaEdit });
+        // Recargar tareas
+        const relacionUsuarioHuerta = misHuertas.find(
+          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+        );
+        if (relacionUsuarioHuerta) {
+          const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+          setTareasHuerta(tareas);
+        }
+      } else {
+        showToast(`Error al actualizar tarea: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error al actualizar tarea:', error);
+      showToast('Error al actualizar tarea', 'error');
+    }
   };
 
   const handleEliminarTarea = () => {
     setShowConfirmDelete(true);
   };
 
-  const handleConfirmDelete = () => {
-    setShowConfirmDelete(false);
-    setShowTareaModal(false);
-    setTareaSeleccionada(null);
-    // Aquí podrías eliminar la tarea del estado global o hacer una petición al backend
+  const handleConfirmDelete = async () => {
+    try {
+      const result = await deleteTarea(tareaSeleccionada.id_tarea);
+      
+      if (result.success) {
+        showToast('Tarea eliminada exitosamente', 'success');
+        setShowConfirmDelete(false);
+        setShowTareaModal(false);
+        setTareaSeleccionada(null);
+        // Recargar tareas
+        const relacionUsuarioHuerta = misHuertas.find(
+          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+        );
+        if (relacionUsuarioHuerta) {
+          const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+          setTareasHuerta(tareas);
+        }
+      } else {
+        showToast(`Error al eliminar tarea: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error al eliminar tarea:', error);
+      showToast('Error al eliminar tarea', 'error');
+    }
   };
 
   const handleCancelDelete = () => {
@@ -320,7 +513,15 @@ const Dashboard = () => {
   };
 
   const handleAbrirCrearTarea = () => {
-    setNuevaTarea({ tarea: '', descripcion: '', asignado: miembrosEjemplo[0]?.nombre || '', cultivo: 'Tomate cherry' });
+    setNuevaTarea({ 
+      titulo: '', 
+      descripcion: '', 
+      fecha_inicio: new Date().toISOString().split('T')[0],
+      fecha_fin: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      id_estado_tarea: 1, // Pendiente por defecto
+      id_cultivo: 1,
+      id_usuarios_huertas: 0
+    });
     setShowCrearTarea(true);
   };
 
@@ -328,14 +529,276 @@ const Dashboard = () => {
     setShowCrearTarea(false);
   };
 
-  const handleGuardarCrearTarea = () => {
-    // Aquí podrías agregar la tarea al estado global o hacer una petición al backend
-    setShowCrearTarea(false);
+  const handleGuardarCrearTarea = async () => {
+    if (!nuevaTarea.titulo.trim() || !nuevaTarea.descripcion.trim()) {
+      showToast('Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    try {
+      // Obtener la relación usuario-huerta para el usuario actual
+      const relacionUsuarioHuerta = misHuertas.find(
+        h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+      );
+
+      if (!relacionUsuarioHuerta) {
+        showToast('No tienes permisos para crear tareas en esta huerta', 'error');
+        return;
+      }
+
+      const tareaData = {
+        ...nuevaTarea,
+        id_usuarios_huertas: relacionUsuarioHuerta.id_usuarios_huertas
+      };
+
+      console.log('Datos de tarea a enviar:', tareaData);
+
+      const result = await createTarea(tareaData);
+      
+      if (result.success) {
+        showToast('Tarea creada exitosamente', 'success');
+        setShowCrearTarea(false);
+        // Recargar tareas
+        const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+        setTareasHuerta(tareas);
+        // Agregar como mensaje en el chat
+        const nuevaTareaMensaje = {
+          id: Date.now(),
+          tipo: 'tarea',
+          usuario: `${user.nombre} ${user.apellido}`,
+          contenido: `Nueva tarea: ${nuevaTarea.titulo}`,
+          fecha: new Date().toISOString(),
+          avatar: `${user.nombre[0]}${user.apellido[0]}`,
+          completada: false
+        };
+        setMensajes(prev => [...prev, nuevaTareaMensaje]);
+      } else {
+        showToast(`Error al crear tarea: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error al crear tarea:', error);
+      showToast('Error al crear tarea', 'error');
+    }
+  };
+
+  const handleCancelarCrearHuerta = () => {
+    setShowCrearHuerta(false);
+    setNuevaHuerta({ nombre: '', descripcion: '', direccion: '' });
+    setHuertaErrors({});
+  };
+
+  const handleHuertaInputChange = (field, value) => {
+    setNuevaHuerta({ ...nuevaHuerta, [field]: value });
+    // Limpiar error del campo cuando el usuario empiece a escribir
+    if (huertaErrors[field]) {
+      setHuertaErrors({ ...huertaErrors, [field]: null });
+    }
+  };
+
+  const validateHuerta = () => {
+    const newErrors = {};
+    if (nuevaHuerta.nombre.trim().length < 10) {
+      newErrors.nombre = 'El nombre debe tener al menos 10 caracteres';
+    }
+    if (nuevaHuerta.descripcion.trim().length < 20) {
+      newErrors.descripcion = 'La descripción debe tener al menos 20 caracteres';
+    }
+    if (nuevaHuerta.direccion.trim().length < 5) {
+      newErrors.direccion = 'La dirección debe tener al menos 5 caracteres';
+    }
+    return newErrors;
+  };
+
+  const handleCrearHuerta = async () => {
+    const validationErrors = validateHuerta();
+    setHuertaErrors(validationErrors);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
+    setCreandoHuerta(true);
+    try {
+      // Crear la huerta
+      const huertaData = {
+        nombre_huerta: nuevaHuerta.nombre,
+        descripcion: nuevaHuerta.descripcion,
+        direccion_huerta: nuevaHuerta.direccion,
+        fecha_creacion: new Date().toISOString().split('T')[0]
+      };
+
+      const result = await createHuerta(huertaData);
+      
+      if (result.success) {
+        // Vincular al usuario como propietario de la huerta
+        const huertaId = result.data.huertaId;
+        await fetch('/api/usuarios-huertas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_usuario: user.id_usuario,
+            id_huerta: huertaId,
+            fecha_vinculacion: new Date().toISOString().split('T')[0]
+          }),
+        });
+
+        // Actualizar las listas
+        await fetchHuertas();
+        await fetchUsuariosHuertas();
+        
+        // Actualizar mis huertas
+        const huertasUsuario = await fetchUsuariosHuertasByUserId(user.id_usuario);
+        setMisHuertas(huertasUsuario);
+        
+        // Cambiar el rol del usuario a propietario
+        const propietarioTipo = tiposUsuario.find(tipo => 
+          tipo.descripcion_tipo_usuario.toLowerCase().includes('propietario')
+        );
+        
+        if (propietarioTipo && user.id_tipo_usuario !== propietarioTipo.id_tipo_usuario) {
+          const updateResult = await updateUser({
+            id_usuario: user.id_usuario,
+            id_tipo_usuario: propietarioTipo.id_tipo_usuario
+          });
+          
+          if (updateResult.success) {
+            console.log('Rol actualizado a propietario exitosamente');
+            showToast('¡Rol actualizado a propietario exitosamente!', 'success');
+          } else {
+            console.error('Error al actualizar rol:', updateResult.error);
+            showToast('Huerta creada pero no se pudo actualizar el rol. Contacta al administrador.', 'warning');
+          }
+        }
+        
+        // Limpiar formulario y cerrar modal
+        setNuevaHuerta({ nombre: '', descripcion: '', direccion: '' });
+        setHuertaErrors({});
+        setShowCrearHuerta(false);
+        
+        // Mostrar mensaje de éxito (podríamos usar un toast aquí)
+        console.log('¡Huerta creada exitosamente! Ya eres el propietario.');
+        showToast('¡Huerta creada exitosamente! Ya eres el propietario.', 'success');
+      } else {
+        setHuertaErrors({ general: result.error });
+        showToast(`Error al crear la huerta: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error al crear huerta:', error);
+      const errorMessage = 'Error al crear la huerta. Por favor intenta de nuevo.';
+      setHuertaErrors({ general: errorMessage });
+      showToast(errorMessage, 'error');
+    } finally {
+      setCreandoHuerta(false);
+    }
+  };
+
+  const handleAbrirCrearHuerta = () => {
+    setShowCrearHuerta(true);
+    setNuevaHuerta({ nombre: '', descripcion: '', direccion: '' });
+    setHuertaErrors({});
+  };
+
+  // Unirse a una huerta
+  const handleUnirseHuerta = async (huerta) => {
+    if (!user) return;
+    try {
+      // Insertar en usuarios_huertas
+      await fetch('/api/usuarios-huertas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_usuario: user.id_usuario,
+          id_huerta: huerta.id_huerta,
+          fecha_vinculacion: new Date().toISOString().split('T')[0]
+        }),
+      });
+      // Si el usuario es invitado, cambiar a miembro
+      const miembroTipo = tiposUsuario.find(tipo => tipo.descripcion_tipo_usuario.toLowerCase().includes('miembro'));
+      if (miembroTipo && user.id_tipo_usuario !== miembroTipo.id_tipo_usuario) {
+        await updateUser({
+          id_usuario: user.id_usuario,
+          id_tipo_usuario: miembroTipo.id_tipo_usuario
+        });
+      }
+      // Actualizar listas
+      await fetchHuertas();
+      await fetchUsuariosHuertas();
+      const huertasUsuario = await fetchUsuariosHuertasByUserId(user.id_usuario);
+      setMisHuertas(huertasUsuario);
+      showToast('¡Te has unido a la huerta!', 'success');
+    } catch (error) {
+      showToast('Error al unirse a la huerta', 'error');
+    }
+  };
+
+  // Abandonar una huerta
+  const handleAbandonarHuerta = async (huerta) => {
+    if (!user) return;
+    try {
+      // Buscar la relación usuario-huerta
+      const relacion = misHuertas.find(uh => uh.id_huerta.id_huerta === huerta.id_huerta);
+      if (!relacion) return;
+      // Eliminar la relación
+      await fetch(`/api/usuarios-huertas/${relacion.id_usuarios_huertas}`, {
+        method: 'DELETE',
+      });
+      // Actualizar listas
+      await fetchHuertas();
+      await fetchUsuariosHuertas();
+      const huertasUsuario = await fetchUsuariosHuertasByUserId(user.id_usuario);
+      setMisHuertas(huertasUsuario);
+      // Si el usuario no tiene más huertas, cambiar a invitado
+      if (huertasUsuario.length === 0) {
+        const invitadoTipo = tiposUsuario.find(tipo => tipo.descripcion_tipo_usuario.toLowerCase().includes('invitado'));
+        if (invitadoTipo && user.id_tipo_usuario !== invitadoTipo.id_tipo_usuario) {
+          await updateUser({
+            id_usuario: user.id_usuario,
+            id_tipo_usuario: invitadoTipo.id_tipo_usuario
+          });
+        }
+      }
+      setHuertaSeleccionada(null);
+      showToast('Has abandonado la huerta', 'info');
+    } catch (error) {
+      showToast('Error al abandonar la huerta', 'error');
+    }
+  };
+
+  const handleCambiarEstadoTarea = async (nuevoEstadoId) => {
+    try {
+      const result = await updateEstadoTarea(tareaSeleccionada.id_tarea, nuevoEstadoId);
+      
+      if (result.success) {
+        showToast('Estado de tarea actualizado exitosamente', 'success');
+        // Actualizar el estado local
+        const nuevoEstado = estadosTareas.find(e => e.id_estado_tarea === nuevoEstadoId);
+        setTareaSeleccionada({ 
+          ...tareaSeleccionada, 
+          id_estado_tarea: nuevoEstadoId,
+          estado_tarea: nuevoEstado
+        });
+        // Recargar tareas
+        const relacionUsuarioHuerta = misHuertas.find(
+          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+        );
+        if (relacionUsuarioHuerta) {
+          const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+          setTareasHuerta(tareas);
+        }
+      } else {
+        showToast(`Error al actualizar estado: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error al actualizar estado de tarea:', error);
+      showToast('Error al actualizar estado de tarea', 'error');
+    }
   };
 
   if (!user) {
     return <Loader />;
   }
+
+  console.log('miembrosHuerta:', miembrosHuerta);
 
   return (
     <motion.div
@@ -359,7 +822,7 @@ const Dashboard = () => {
                 title="Volver al inicio">
                 <AiOutlineHome size={28} />
               </button>
-              <button className="sidebar-new-huerta-btn" onClick={() => setShowCrearHuerta(true)} title="Crear nueva huerta">
+              <button className="sidebar-new-huerta-btn" onClick={handleAbrirCrearHuerta} title="Crear nueva huerta">
                 <FiPlus size={26} />
               </button>
               <button className="sidebar-user-btn" onClick={() => setShowProfile(true)} title="Perfil de usuario">
@@ -368,20 +831,43 @@ const Dashboard = () => {
             </div>
             <input type="text" className="sidebar-search" placeholder="Buscar huerta..." />
             <div className="sidebar-list">
-              {huertasEjemplo.map((huerta) => (
-                <div 
-                  key={huerta.id} 
-                  className={`sidebar-channel ${huertaSeleccionada?.id === huerta.id ? 'active' : ''}`}
-                  onClick={() => handleHuertaClick(huerta)}
-                >
-                  <div className="channel-info">
-                    <div className="channel-title">{huerta.nombre}</div>
-                    <div className="channel-desc">{huerta.descripcion}</div>
-                  </div>
+              {loadingMisHuertas ? (
+                <div className="sidebar-loading">
+                  <Loader />
+                  <p>Cargando mis huertas...</p>
                 </div>
-              ))}
+              ) : misHuertas.length === 0 ? (
+                <div className="sidebar-empty-state">
+                  <div className="empty-state-icon">🌱</div>
+                  <h3>¡Bienvenido a HuertaConecta!</h3>
+                  <p>No tienes huertas aún. ¡Crea tu primera huerta y comienza tu aventura de cultivo!</p>
+                  <button 
+                    className="create-huerta-btn"
+                    onClick={handleAbrirCrearHuerta}
+                  >
+                    <FiPlus size={20} />
+                    Crear mi primera huerta
+                  </button>
+                </div>
+              ) : (
+                misHuertas.map((usuarioHuerta) => {
+                  const huerta = usuarioHuerta.id_huerta ? usuarioHuerta.id_huerta : usuarioHuerta;
+                  return (
+                    <div 
+                      key={usuarioHuerta.id_usuarios_huertas || huerta.id_huerta} 
+                      className={`sidebar-channel ${huertaSeleccionada?.id_huerta === huerta.id_huerta ? 'active' : ''}`}
+                      onClick={() => handleHuertaClick(huerta)}
+                    >
+                      <div className="channel-info">
+                        <div className="channel-title">{huerta.nombre_huerta}</div>
+                        <div className="channel-desc">{huerta.descripcion}</div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
-            <button className="sidebar-discover-btn" onClick={() => setShowDiscoverPanel(true)}>Descubrir más</button>
+            <button className="sidebar-discover-btn" onClick={() => setShowDiscoverPanel(true)}>Descubrir huertas</button>
             <AnimatePresence>
               {showProfile && (
                 <motion.div
@@ -420,8 +906,8 @@ const Dashboard = () => {
                   {/* Header del chat */}
                   <div className="chat-header">
                     <div className="chat-header-info" style={{ cursor: 'pointer' }} onClick={() => setShowInfoPanel(true)}>
-                      <h2>{huertaSeleccionada.nombre}</h2>
-                      <p>{huertaSeleccionada.descripcion}</p>
+                      <h2>{huertaSeleccionada?.nombre_huerta}</h2>
+                      <p>{huertaSeleccionada?.descripcion}</p>
                     </div>
                     <div className="chat-header-actions">
                       <button 
@@ -435,7 +921,7 @@ const Dashboard = () => {
                           <button onClick={handleCerrarHuerta}>
                             <FaTimes /> Cerrar
                           </button>
-                          <button>
+                          <button onClick={() => handleAbandonarHuerta(huertaSeleccionada)}>
                             <FaUserCircle /> Abandonar
                           </button>
                         </div>
@@ -502,13 +988,15 @@ const Dashboard = () => {
                       >
                         <AiOutlineSend />
                       </button>
-                      <button 
-                        className="chat-task-btn"
-                        onClick={handleAbrirCrearTarea}
-                        title="Crear tarea"
-                      >
-                        <AiOutlineCheckSquare />
-                      </button>
+                      {esPropietarioDeHuerta() && (
+                        <button 
+                          className="chat-task-btn"
+                          onClick={handleAbrirCrearTarea}
+                          title="Crear tarea"
+                        >
+                          <AiOutlineCheckSquare />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -544,41 +1032,84 @@ const Dashboard = () => {
             transition={{ duration: 0.35, ease: 'easeInOut' }}
           >
             <button className="info-panel-close-btn" onClick={() => setShowInfoPanel(false)} title="Cerrar">×</button>
-            <h3>{huertaSeleccionada.nombre}</h3>
-            <p className="info-desc">{huertaSeleccionada.descripcion}</p>
+            <h2 className="info-title">{huertaSeleccionada?.nombre_huerta}</h2>
+            <p className="info-desc">{huertaSeleccionada?.descripcion}</p>
             <div className="info-section">
               <strong>Ubicación:</strong>
-              <p>{huertaSeleccionada.direccion}</p>
+              <p>{huertaSeleccionada?.direccion_huerta}</p>
             </div>
             <div className="info-section">
               <strong>Miembros:</strong>
-              <ul>
-                {miembrosEjemplo.map((m, i) => (
-                  <li key={i} className="miembro-item">
-                    <div className="miembro-content">
-                      <span>{m.nombre}</span>
-                      <span className="info-rol">{m.rol}</span>
-                    </div>
-                    <button className="miembro-delete-btn" title="Eliminar miembro" onClick={() => handleEliminarMiembro(m)}><FiTrash2 color="#fff" /></button>
-                  </li>
-                ))}
-              </ul>
+              {loadingMiembros ? (
+                <p>Cargando miembros...</p>
+              ) : (
+                <ul>
+                  {miembrosHuerta.length === 0 ? (
+                    <li>No hay miembros en esta huerta.</li>
+                  ) : (
+                    miembrosHuerta.map((relacion, i) => {
+                      const esPropietarioDeEstaHuerta = miembrosHuerta.some(
+                        (rel) =>
+                          rel.id_huerta?.id_huerta === huertaSeleccionada?.id_huerta &&
+                          rel.id_usuario?.id_usuario === user?.id_usuario &&
+                          rel.id_usuario?.id_tipo_usuario?.descripcion_tipo_usuario?.toLowerCase().includes('propietario')
+                      );
+                      return (
+                        <li key={relacion.id_usuarios_huertas || i} className="miembro-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div>
+                            <span style={{ fontWeight: 'bold' }}>{relacion.id_usuario?.nombre} {relacion.id_usuario?.apellido}</span>
+                            <span className="info-rol" style={{ display: 'block', color: '#2ecc40', fontWeight: 'bold' }}>{relacion.id_usuario?.id_tipo_usuario?.descripcion_tipo_usuario || ''}</span>
+                          </div>
+                          {esPropietarioDeEstaHuerta && user.id_usuario !== relacion.id_usuario?.id_usuario && (
+                            <button
+                              className="eliminar-miembro-btn"
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e74c3c', fontSize: '1.3em', marginLeft: 'auto', marginRight: 0, display: 'flex', alignItems: 'center' }}
+                              onClick={() => {
+                                setMiembroAEliminar(relacion);
+                                setShowConfirmDeleteMiembro(true);
+                              }}
+                              title="Eliminar miembro"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              )}
             </div>
             <div className="info-section">
               <strong>Tareas:</strong>
-              <ul>
-                {tareasEjemplo.map((t, i) => (
-                  <li key={i} className="tarea-item" onClick={() => handleTareaClick(t)}>
-                    <div className="tarea-content">
-                      <div className="tarea-header">
-                        <span className="tarea-titulo">{t.tarea}</span>
-                        <span className={`info-tarea-estado ${t.estado === 'Completada' ? 'completada' : 'pendiente'}`}>{t.estado}</span>
-                      </div>
-                      <span className="tarea-asignado">Asignado a: {t.asignado}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {loadingTareas ? (
+                <p>Cargando tareas...</p>
+              ) : (
+                <ul>
+                  {tareasHuerta.length === 0 ? (
+                    <li>No hay tareas en esta huerta.</li>
+                  ) : (
+                    tareasHuerta.map((tarea, i) => (
+                      <li key={tarea.id_tarea || i} className="tarea-item" onClick={() => handleTareaClick(tarea)}>
+                        <div className="tarea-content">
+                          <div className="tarea-header">
+                            <span className="tarea-titulo">{tarea.titulo}</span>
+                            <span className={`info-tarea-estado ${tarea.estado_tarea?.descripcion_estado_tarea?.toLowerCase().includes('completada') ? 'completada' : 'pendiente'}`}>
+                              {tarea.estado_tarea?.descripcion_estado_tarea || 'Pendiente'}
+                            </span>
+                          </div>
+                          <span className="tarea-asignado">
+                            Cultivo: {tarea.cultivo?.titulo_cultivo || 'Sin cultivo'}
+                          </span>
+                          <span className="tarea-fechas">
+                            {new Date(tarea.fecha_inicio).toLocaleDateString()} - {new Date(tarea.fecha_fin).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              )}
             </div>
           </motion.aside>
         )}
@@ -603,13 +1134,17 @@ const Dashboard = () => {
             >
               
               <div className="modal-header">
-                <h2>{tareaSeleccionada.tarea}</h2>
+                <h2>{tareaSeleccionada.titulo}</h2>
                 <div className="modal-header-actions">
-                  <span className={`modal-estado ${tareaSeleccionada.estado === 'Completada' ? 'completada' : 'pendiente'}`}>
-                    {tareaSeleccionada.estado}
+                  <span className={`modal-estado ${tareaSeleccionada.estado_tarea?.descripcion_estado_tarea?.toLowerCase().includes('completada') ? 'completada' : 'pendiente'}`}>
+                    {tareaSeleccionada.estado_tarea?.descripcion_estado_tarea || 'Pendiente'}
                   </span>
-                  <button className="modal-edit-btn" title="Editar tarea" onClick={handleEditarTarea}><FiEdit color="#fff" /></button>
-                  <button className="modal-delete-btn" title="Eliminar tarea" onClick={handleEliminarTarea}><FiTrash2 color="#fff" /></button>
+                  {esPropietarioDeHuerta() && (
+                    <>
+                      <button className="modal-edit-btn" title="Editar tarea" onClick={handleEditarTarea}><FiEdit color="#fff" /></button>
+                      <button className="modal-delete-btn" title="Eliminar tarea" onClick={handleEliminarTarea}><FiTrash2 color="#fff" /></button>
+                    </>
+                  )}
                   <button className="modal-close-btn" onClick={handleCerrarTareaModal}>×</button>
                 </div>
               </div>
@@ -618,7 +1153,7 @@ const Dashboard = () => {
                 <div className="tarea-modal-content">
                   <div className="modal-section">
                     <h3>Título</h3>
-                    <input className="modal-input" value={tareaEdit.tarea} onChange={e => setTareaEdit({ ...tareaEdit, tarea: e.target.value })} />
+                    <input className="modal-input" value={tareaEdit.titulo} onChange={e => setTareaEdit({ ...tareaEdit, titulo: e.target.value })} />
                   </div>
                   <div className="modal-section">
                     <h3>Descripción</h3>
@@ -634,18 +1169,26 @@ const Dashboard = () => {
                     />
                   </div>
                   <div className="modal-section">
-                    <h3>Asignado a</h3>
-                    <select className="modal-input" value={tareaEdit.asignado} onChange={e => setTareaEdit({ ...tareaEdit, asignado: e.target.value })}>
-                      {miembrosEjemplo.map((m, idx) => (
-                        <option key={idx} value={m.nombre}>{m.nombre}</option>
+                    <h3>Fecha de inicio</h3>
+                    <input className="modal-input" type="date" value={tareaEdit.fecha_inicio} onChange={e => setTareaEdit({ ...tareaEdit, fecha_inicio: e.target.value })} />
+                  </div>
+                  <div className="modal-section">
+                    <h3>Fecha de fin</h3>
+                    <input className="modal-input" type="date" value={tareaEdit.fecha_fin} onChange={e => setTareaEdit({ ...tareaEdit, fecha_fin: e.target.value })} />
+                  </div>
+                  <div className="modal-section">
+                    <h3>Estado de la tarea</h3>
+                    <select className="modal-input" value={tareaEdit.id_estado_tarea} onChange={e => setTareaEdit({ ...tareaEdit, id_estado_tarea: parseInt(e.target.value) })}>
+                      {estadosTareas.map((estado, idx) => (
+                        <option key={idx} value={estado.id_estado_tarea}>{estado.descripcion_estado_tarea}</option>
                       ))}
                     </select>
                   </div>
                   <div className="modal-section">
-                    <h3>Cultivo destacado</h3>
-                    <select className="modal-input" value={tareaEdit.cultivo} onChange={e => setTareaEdit({ ...tareaEdit, cultivo: e.target.value })}>
-                      {cultivosEjemplo.map((c, idx) => (
-                        <option key={idx} value={c}>{c}</option>
+                    <h3>Cultivo</h3>
+                    <select className="modal-input" value={tareaEdit.id_cultivo} onChange={e => setTareaEdit({ ...tareaEdit, id_cultivo: parseInt(e.target.value) })}>
+                      {cultivos.map((cultivo, idx) => (
+                        <option key={idx} value={cultivo.id_cultivo}>{cultivo.titulo}</option>
                       ))}
                     </select>
                   </div>
@@ -658,19 +1201,38 @@ const Dashboard = () => {
                 <div className="tarea-modal-content">
                   <div className="modal-section">
                     <h3>Título</h3>
-                    <p>{tareaSeleccionada.tarea}</p>
+                    <p>{tareaSeleccionada.titulo}</p>
                   </div>
                   <div className="modal-section">
                     <h3>Descripción</h3>
                     <p>{tareaSeleccionada.descripcion}</p>
                   </div>
                   <div className="modal-section">
-                    <h3>Asignado a</h3>
-                    <p>{tareaSeleccionada.asignado}</p>
+                    <h3>Fechas</h3>
+                    <p>Inicio: {new Date(tareaSeleccionada.fecha_inicio).toLocaleDateString()}</p>
+                    <p>Fin: {new Date(tareaSeleccionada.fecha_fin).toLocaleDateString()}</p>
                   </div>
                   <div className="modal-section">
-                    <h3>Cultivo destacado</h3>
-                    <p>{tareaSeleccionada.cultivo || 'Tomate cherry'}</p>
+                    <h3>Estado actual</h3>
+                    <p>{tareaSeleccionada.estado_tarea?.descripcion_estado_tarea || 'Pendiente'}</p>
+                    {esPropietarioDeHuerta() && (
+                      <div className="estado-selector">
+                        <h4>Cambiar estado:</h4>
+                        <select 
+                          className="modal-input" 
+                          value={tareaSeleccionada.id_estado_tarea}
+                          onChange={(e) => handleCambiarEstadoTarea(parseInt(e.target.value))}
+                        >
+                          {estadosTareas.map((estado, idx) => (
+                            <option key={idx} value={estado.id_estado_tarea}>{estado.descripcion_estado_tarea}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div className="modal-section">
+                    <h3>Cultivo</h3>
+                    <p>{tareaSeleccionada.cultivo?.titulo_cultivo || 'Sin cultivo'}</p>
                   </div>
                 </div>
               )}
@@ -694,16 +1256,29 @@ const Dashboard = () => {
       </AnimatePresence>
       <AnimatePresence>
         {showConfirmDeleteMiembro && miembroAEliminar && (
-          <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <motion.div className="confirm-modal" initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}>
+          <div className="confirm-backdrop">
+            <div className="confirm-content">
               <h3>¿Eliminar miembro?</h3>
-              <p>¿Estás seguro de que deseas eliminar a <b>{miembroAEliminar.nombre}</b>? Esta acción no se puede deshacer.</p>
+              <p>¿Estás seguro de que quieres eliminar a <span className="item-name">{miembroAEliminar.id_usuario?.nombre} {miembroAEliminar.id_usuario?.apellido}</span> de esta huerta?</p>
               <div className="confirm-actions">
-                <button className="modal-cancel-btn" onClick={handleCancelDeleteMiembro}>Cancelar</button>
-                <button className="modal-delete-btn" onClick={handleConfirmDeleteMiembro}>Eliminar</button>
+                <button className="cancel-btn" onClick={() => setShowConfirmDeleteMiembro(false)}>Cancelar</button>
+                <button className="confirm-btn" onClick={async () => {
+                  try {
+                    await fetch(`/api/usuarios-huertas/${miembroAEliminar.id_usuarios_huertas}`, { method: 'DELETE' });
+                    setShowConfirmDeleteMiembro(false);
+                    setMiembroAEliminar(null);
+                    // Refrescar miembros y huertas
+                    const res = await fetch(`/api/usuarios-huertas/huerta/${huertaSeleccionada.id_huerta}`);
+                    const data = await res.json();
+                    setMiembrosHuerta(Array.isArray(data) ? data : []);
+                    showToast('Miembro eliminado correctamente', 'success');
+                  } catch (error) {
+                    showToast('Error al eliminar miembro', 'error');
+                  }
+                }}>Eliminar</button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
       <AnimatePresence>
@@ -717,25 +1292,33 @@ const Dashboard = () => {
               <div className="tarea-modal-content">
                 <div className="modal-section">
                   <h3>Título</h3>
-                  <input className="modal-input" value={nuevaTarea.tarea} onChange={e => setNuevaTarea({ ...nuevaTarea, tarea: e.target.value })} />
+                  <input className="modal-input" value={nuevaTarea.titulo} onChange={e => setNuevaTarea({ ...nuevaTarea, titulo: e.target.value })} />
                 </div>
                 <div className="modal-section">
                   <h3>Descripción</h3>
                   <textarea className="modal-input" value={nuevaTarea.descripcion} onChange={e => setNuevaTarea({ ...nuevaTarea, descripcion: e.target.value })} />
                 </div>
                 <div className="modal-section">
-                  <h3>Asignado a</h3>
-                  <select className="modal-input" value={nuevaTarea.asignado} onChange={e => setNuevaTarea({ ...nuevaTarea, asignado: e.target.value })}>
-                    {miembrosEjemplo.map((m, idx) => (
-                      <option key={idx} value={m.nombre}>{m.nombre}</option>
+                  <h3>Fecha de inicio</h3>
+                  <input className="modal-input" type="date" value={nuevaTarea.fecha_inicio} onChange={e => setNuevaTarea({ ...nuevaTarea, fecha_inicio: e.target.value })} />
+                </div>
+                <div className="modal-section">
+                  <h3>Fecha de fin</h3>
+                  <input className="modal-input" type="date" value={nuevaTarea.fecha_fin} onChange={e => setNuevaTarea({ ...nuevaTarea, fecha_fin: e.target.value })} />
+                </div>
+                <div className="modal-section">
+                  <h3>Estado de la tarea</h3>
+                  <select className="modal-input" value={nuevaTarea.id_estado_tarea} onChange={e => setNuevaTarea({ ...nuevaTarea, id_estado_tarea: e.target.value })}>
+                    {estadosTareas.map((estado, idx) => (
+                      <option key={idx} value={estado.id_estado_tarea}>{estado.descripcion_estado_tarea}</option>
                     ))}
                   </select>
                 </div>
                 <div className="modal-section">
-                  <h3>Cultivo destacado</h3>
-                  <select className="modal-input" value={nuevaTarea.cultivo} onChange={e => setNuevaTarea({ ...nuevaTarea, cultivo: e.target.value })}>
-                    {cultivosEjemplo.map((c, idx) => (
-                      <option key={idx} value={c}>{c}</option>
+                  <h3>Cultivo</h3>
+                  <select className="modal-input" value={nuevaTarea.id_cultivo} onChange={e => setNuevaTarea({ ...nuevaTarea, id_cultivo: parseInt(e.target.value) })}>
+                    {cultivos.map((cultivo, idx) => (
+                      <option key={idx} value={cultivo.id_cultivo}>{cultivo.titulo}</option>
                     ))}
                   </select>
                 </div>
@@ -759,14 +1342,38 @@ const Dashboard = () => {
           >
             <button className="profile-close-btn" onClick={() => setShowDiscoverPanel(false)} title="Cerrar">×</button>
             <h3 className="discover-title">Todas las huertas</h3>
-            <ul className="discover-list">
-              {huertasDisponibles.map((h) => (
-                <li key={h.id} className="discover-item">
-                  <div className="discover-nombre">{h.nombre}</div>
-                  <div className="discover-desc">{h.descripcion}</div>
-                </li>
-              ))}
-            </ul>
+            {huertasLoading ? (
+              <div className="discover-loading">
+                <Loader />
+                <p>Cargando huertas...</p>
+              </div>
+            ) : huertasError ? (
+              <div className="discover-error">
+                <p>Error al cargar huertas: {huertasError}</p>
+                <button onClick={fetchHuertas} className="retry-btn">Reintentar</button>
+              </div>
+            ) : huertas.length === 0 ? (
+              <div className="discover-empty">
+                <p>No hay huertas disponibles</p>
+              </div>
+            ) : (
+              <ul className="discover-list">
+                {huertas.map((huerta) => {
+                  const esMiHuerta = misHuertas.some(uh => uh.id_huerta.id_huerta === huerta.id_huerta);
+                  return (
+                    <li key={huerta.id_huerta} className={`discover-item ${esMiHuerta ? 'discover-item--mi-huerta' : ''}`} onClick={() => handleHuertaClick(huerta)}>
+                      <div className="discover-nombre">{huerta.nombre_huerta}</div>
+                      <div className="discover-desc">{huerta.descripcion}</div>
+                      <div className="discover-direccion">{huerta.direccion_huerta}</div>
+                      {!esMiHuerta && (
+                        <button className="discover-join-btn" onClick={e => { e.stopPropagation(); handleUnirseHuerta(huerta); }}>Unirse</button>
+                      )}
+                      {esMiHuerta && <div className="discover-badge">Mi huerta</div>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -781,19 +1388,58 @@ const Dashboard = () => {
               <div className="tarea-modal-content">
                 <div className="modal-section">
                   <h3>Nombre de la huerta</h3>
-                  <input className="modal-input" value={nuevaHuerta.nombre} onChange={e => setNuevaHuerta({ ...nuevaHuerta, nombre: e.target.value })} />
+                  <input 
+                    className={`modal-input ${huertaErrors.nombre ? 'modal-input--error' : ''}`}
+                    value={nuevaHuerta.nombre} 
+                    onChange={(e) => handleHuertaInputChange('nombre', e.target.value)}
+                    placeholder="Ej: Huerta Orgánica El Paraíso"
+                  />
+                  <div className="modal-help-text">Mínimo 10 caracteres</div>
+                  {huertaErrors.nombre && <div className="modal-error-message">{huertaErrors.nombre}</div>}
                 </div>
                 <div className="modal-section">
                   <h3>Descripción</h3>
-                  <textarea className="modal-input" value={nuevaHuerta.descripcion} onChange={e => setNuevaHuerta({ ...nuevaHuerta, descripcion: e.target.value })} />
+                  <textarea 
+                    className={`modal-input ${huertaErrors.descripcion ? 'modal-input--error' : ''}`}
+                    value={nuevaHuerta.descripcion} 
+                    onChange={(e) => handleHuertaInputChange('descripcion', e.target.value)}
+                    placeholder="Describe tu huerta, qué cultivos tienes, técnicas que usas..."
+                    rows="4"
+                  />
+                  <div className="modal-help-text">Mínimo 20 caracteres</div>
+                  {huertaErrors.descripcion && <div className="modal-error-message">{huertaErrors.descripcion}</div>}
                 </div>
                 <div className="modal-section">
                   <h3>Dirección de la huerta</h3>
-                  <input className="modal-input" value={nuevaHuerta.direccion} onChange={e => setNuevaHuerta({ ...nuevaHuerta, direccion: e.target.value })} />
+                  <input 
+                    className={`modal-input ${huertaErrors.direccion ? 'modal-input--error' : ''}`}
+                    value={nuevaHuerta.direccion} 
+                    onChange={(e) => handleHuertaInputChange('direccion', e.target.value)}
+                    placeholder="Ej: Calle 123, Ciudad Jardín, Bogotá"
+                  />
+                  <div className="modal-help-text">Mínimo 5 caracteres</div>
+                  {huertaErrors.direccion && <div className="modal-error-message">{huertaErrors.direccion}</div>}
                 </div>
+                {huertaErrors.general && (
+                  <div className="modal-error-message modal-error-message--general">
+                    {huertaErrors.general}
+                  </div>
+                )}
                 <div className="modal-edit-actions">
-                  <button className="modal-save-btn" onClick={() => setShowCrearHuerta(false)}>Crear</button>
-                  <button className="modal-cancel-btn" onClick={() => setShowCrearHuerta(false)}>Cancelar</button>
+                  <button 
+                    className="modal-save-btn" 
+                    onClick={handleCrearHuerta}
+                    disabled={creandoHuerta}
+                  >
+                    {creandoHuerta ? 'Creando...' : 'Crear'}
+                  </button>
+                  <button 
+                    className="modal-cancel-btn" 
+                    onClick={handleCancelarCrearHuerta}
+                    disabled={creandoHuerta}
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </div>
             </motion.div>

@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import Modal from '../../common/Modal';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import PublicacionForm from '../forms/PublicacionForm';
+import { useHuerta } from '../../../context/HuertaContext.tsx';
+import { useUsuario } from '../../../context/UsuarioContext.tsx';
 import '../forms/UserForm.css';
 
 const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editPublicacion, setEditPublicacion] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, publicacion: null });
+  const { huertas } = useHuerta();
+  const { usuarios } = useUsuario();
 
   const handleNew = () => {
     setEditPublicacion(null);
@@ -48,6 +52,15 @@ const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
     handleClose();
   };
 
+  // Función para obtener el nombre de la huerta y usuario por la relación anidada
+  const getHuertaNombre = (pub) => {
+    return pub.id_usuarios_huertas?.id_huerta?.nombre_huerta || '-';
+  };
+  const getUsuarioNombre = (pub) => {
+    const u = pub.id_usuarios_huertas?.id_usuario;
+    return u ? `${u.nombre} ${u.apellido}` : '-';
+  };
+
   return (
     <div className="admin-table-wrapper">
       <div className="admin-table-header">
@@ -61,46 +74,34 @@ const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
             <th>Título</th>
             <th>Descripción</th>
             <th>Contenido</th>
+            <th>Huerta</th>
+            <th>Usuario</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Cultivo de Tomates</td>
-            <td>Guía completa para el cultivo</td>
-            <td>Los tomates son una excelente opción...</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ 
-                id: 1, 
-                titulo: 'Cultivo de Tomates', 
-                descripcion: 'Guía completa para el cultivo', 
-                contenido: 'Los tomates son una excelente opción...' 
-              })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ 
-                id: 1, 
-                titulo: 'Cultivo de Tomates' 
-              })}>Eliminar</button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Huerta Orgánica</td>
-            <td>Beneficios de la agricultura orgánica</td>
-            <td>La agricultura orgánica ofrece múltiples beneficios...</td>
-            <td>
-              <button className="edit-btn" onClick={() => handleEdit({ 
-                id: 2, 
-                titulo: 'Huerta Orgánica', 
-                descripcion: 'Beneficios de la agricultura orgánica', 
-                contenido: 'La agricultura orgánica ofrece múltiples beneficios...' 
-              })}>Editar</button>
-              <button className="delete-btn" onClick={() => handleDelete({ 
-                id: 2, 
-                titulo: 'Huerta Orgánica' 
-              })}>Eliminar</button>
-            </td>
-          </tr>
+          {publicaciones && publicaciones.length > 0 ? (
+            publicaciones.map((pub) => (
+              <tr key={pub.id || pub.id_publicacion}>
+                <td>{pub.id || pub.id_publicacion}</td>
+                <td>{pub.titulo || pub.titulo_post}</td>
+                <td>{pub.descripcion || ''}</td>
+                <td>{pub.contenido || pub.contenido_post}</td>
+                <td>{getHuertaNombre(pub)}</td>
+                <td>{getUsuarioNombre(pub)}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEdit(pub)}>Editar</button>
+                  <button className="delete-btn" onClick={() => handleDelete(pub)}>Eliminar</button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                No hay publicaciones registradas
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
       

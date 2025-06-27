@@ -103,4 +103,16 @@ export class PublicacionesAdapter implements PublicacionesPort {
         if (!entity) return null;
         return this.toDomain(entity);
     }
+
+    async getPublicacionesByHuertaId(id_huerta: number): Promise<PublicacionDomain[]> {
+        // Buscar todas las publicaciones de usuarios_huertas que pertenezcan a la huerta
+        const entities = await this.publicacionesRepository.createQueryBuilder('publicacion')
+            .leftJoinAndSelect('publicacion.usuarios_huertas', 'usuarios_huertas')
+            .leftJoinAndSelect('usuarios_huertas.usuario', 'usuario')
+            .leftJoinAndSelect('usuarios_huertas.huerta', 'huerta')
+            .leftJoinAndSelect('usuario.tipo_usuario', 'tipo_usuario')
+            .where('usuarios_huertas.id_huerta = :id_huerta', { id_huerta })
+            .getMany();
+        return await Promise.all(entities.map(entity => this.toDomain(entity)));
+    }
 } 

@@ -59,4 +59,12 @@ router.delete("/publicaciones/:id", async (req, res) => {
     }
 });
 
+router.get("/publicaciones/huerta/:id", async (req, res) => {
+    try {
+        await publicacionesController.getPublicacionesByHuertaId(req, res);
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener las publicaciones de la huerta" });
+    }
+});
+
 export default router;

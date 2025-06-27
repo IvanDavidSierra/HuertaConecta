@@ -5,8 +5,17 @@ const tareasAdapter = new TareasAdapter();
 
 export class TareasController {
   static async createTarea(req: Request, res: Response) {
-    const tarea = await tareasAdapter.createTarea(req.body);
-    res.json(tarea);
+    try {
+      console.log('Datos recibidos para crear tarea:', req.body);
+      const tarea = await tareasAdapter.createTarea(req.body);
+      res.json(tarea);
+    } catch (error) {
+      console.error('Error en createTarea controller:', error);
+      res.status(500).json({ 
+        message: "Error en la creación de la tarea",
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
   }
 
   static async getTareaById(req: Request, res: Response) {

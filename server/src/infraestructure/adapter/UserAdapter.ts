@@ -56,7 +56,7 @@ export class UserAdapter implements UserPort {
             apellido: user.apellido ?? existingUser.apellido,
             correo: user.correo ?? existingUser.correo,
             contrasena: user.contrasena ?? existingUser.contrasena,
-            id_tipo_usuario: user.id_tipo_usuario ?? existingUser.tipo_usuario,
+            tipo_usuario: user.id_tipo_usuario !== undefined ? { id_tipo_usuario: user.id_tipo_usuario } : existingUser.tipo_usuario,
             fecha_creacion: user.fecha_creacion ?? existingUser.fecha_creacion,
       });
       await this.userRepository.save(existingUser);
@@ -70,7 +70,7 @@ export class UserAdapter implements UserPort {
         try {
             const existingUser = await this.userRepository.findOne({where:{id_usuario:id}});
             if(!existingUser) return false;
-            await this.userRepository.save(existingUser);
+            await this.userRepository.delete({ id_usuario: id });
             return true;
         } catch (e) {
             console.error("Error deleting user", e);

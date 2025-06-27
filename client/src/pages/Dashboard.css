@@ -1018,6 +1018,10 @@
   margin: 0;
 }
 
+.modal-section p:first-of-type {
+  margin-top: 0;
+}
+
 .comentarios-list {
   display: flex;
   flex-direction: column;
@@ -1146,8 +1150,19 @@ textarea.modal-input {
   transition: background 0.2s, color 0.2s;
 }
 .modal-cancel-btn:hover {
-  background: #23272b;
-  color: #25d366;
+  background: #6c757d;
+}
+
+.modal-save-btn:disabled,
+.modal-cancel-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-save-btn:disabled:hover,
+.modal-cancel-btn:disabled:hover {
+  background: #6c757d;
 }
 
 .confirm-modal {
@@ -1234,12 +1249,11 @@ textarea.modal-input {
   overflow-y: auto;
 }
 .discover-item {
-  background: rgba(233, 230, 230, 0.144);
-  border-radius: 8px;
-  margin-bottom: 0.7rem;
-  padding: 0.8rem 1rem;
-  transition: background 0.2s;
+  padding: 1rem;
+  border-bottom: 1px solid #222e35;
   cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
 }
 .discover-item:hover {
   background: rgba(37, 211, 101, 0.527);
@@ -1250,11 +1264,66 @@ textarea.modal-input {
   font-size: 1.05rem;
 }
 .discover-desc {
-  color: #000000;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  color: #aebac1;
   margin-top: 0.2rem;
 }
-
+.discover-direccion {
+  font-size: 0.8rem;
+  color: #8696a0;
+  margin-top: 0.1rem;
+}
+.discover-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #aebac1;
+}
+.discover-loading p {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+.discover-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #f15c6d;
+  text-align: center;
+}
+.discover-error p {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.retry-btn {
+  background: #25d366;
+  color: #111b21;
+  border: none;
+  border-radius: 16px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+.retry-btn:hover {
+  background: #1da851;
+}
+.discover-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #aebac1;
+  text-align: center;
+}
+.discover-empty p {
+  font-size: 0.9rem;
+}
 
 @media (max-width: 600px) {
   .sidebar-discover-panel {
@@ -1279,7 +1348,153 @@ textarea.modal-input {
   transition: background 0.2s, color 0.2s, transform 0.2s;
 }
 .sidebar-new-huerta-btn:hover {
+  background: #1da851;
+}
+
+.sidebar-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #000000;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.sidebar-empty-state h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #000000;
+}
+
+.sidebar-empty-state p {
+  font-size: 0.9rem;
+  color: #000000;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.create-huerta-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   background: #25d366;
   color: #111b21;
-  transform: scale(1.08);
+  border: none;
+  border-radius: 20px;
+  padding: 0.8rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+
+.create-huerta-btn:hover {
+  background: #1da851;
+}
+
+.sidebar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #000000;
+}
+
+.sidebar-loading p {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.discover-item--mi-huerta {
+  border-left: 3px solid #25d366;
+  background: rgba(37, 211, 102, 0.1);
+}
+
+.discover-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #25d366;
+  color: #111b21;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.discover-join-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #25d366;
+  color: #111b21;
+  border: none;
+  border-radius: 10px;
+  padding: 0.3rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.discover-join-btn:hover {
+  background: #1da851;
+}
+
+.modal-input--error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.modal-help-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.modal-error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #f5c6cb;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.modal-error-message--general {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
+  margin-bottom: 1rem;
+}
+
+.tarea-fechas {
+  font-size: 0.8rem;
+  color: #aebac1;
+  font-style: italic;
+}
+
+.estado-selector {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid #25d366;
+}
+
+.estado-selector h4 {
+  color: #25d366;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
 } 
