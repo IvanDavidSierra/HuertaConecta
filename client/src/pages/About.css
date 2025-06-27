@@ -1,0 +1,139 @@
+.about-bg {
+  min-height: 100vh;
+  width: 100%;
+  background-image: url('https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=1200&q=80'); /* Imagen de huerta */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.about-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(44, 62, 80, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-container {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 2.5rem 2rem 2rem 2rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  text-align: center;
+  color: #fff;
+}
+
+.about-title {
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  color: #fff;
+}
+
+.about-desc {
+  font-size: 1.15rem;
+  margin-bottom: 2rem;
+  font-weight: 400;
+  color: #fff;
+}
+
+.about-section {
+  margin-bottom: 2.2rem;
+}
+
+.about-subtitle {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #34A853;
+}
+
+.about-values {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.about-values li {
+  background: rgba(52, 168, 83, 0.13);
+  color: #fff;
+  border-radius: 18px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  font-size: 1rem;
+  border: 1.5px solid #34A853;
+}
+
+.about-team {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.team-member {
+  background: rgba(255,255,255,0.10);
+  border-radius: 16px;
+  padding: 1.2rem 1.1rem 1rem 1.1rem;
+  box-shadow: 0 2px 12px rgba(52,168,83,0.10);
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.team-member:hover {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 6px 24px rgba(52,168,83,0.18);
+}
+
+.team-photo {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 0.7rem;
+  border: 2.5px solid #34A853;
+  box-shadow: 0 2px 8px rgba(52,168,83,0.13);
+}
+
+.team-name {
+  font-weight: 600;
+  font-size: 1.08rem;
+  margin-bottom: 0.2rem;
+  color: #fff;
+}
+
+.team-role {
+  font-size: 0.98rem;
+  color: #c2e7cb;
+}
+
+@media (max-width: 700px) {
+  .about-container {
+    padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+  }
+  .about-team {
+    gap: 1rem;
+  }
+  .team-member {
+    width: 100%;
+    min-width: 180px;
+  }
+}

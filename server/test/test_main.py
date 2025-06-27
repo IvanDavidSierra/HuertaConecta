@@ -94,7 +94,6 @@ def crear_huerta(driver):
     boton_crear.click()
     print("✅ Huerta creada desde flujo completo")
 
-# 🔥 Ejecución del flujo
 driver = mk_driver()
 wd_page(driver, "/")             # Ir al home
 click_conectate(driver)          # Ir a login

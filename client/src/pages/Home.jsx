@@ -7,22 +7,63 @@ import homeImageUno from '../assets/home-image-uno.jpg';
 import homeImageTwo from '../assets/home-image-two.jpg';
 import homeImageThree from '../assets/home-image-three.jpg';
 
+const features = [
+  {
+    title: 'Gestión de Huertas',
+    desc: 'Administra y monitorea tus cultivos de manera sencilla y eficiente.'
+  },
+  {
+    title: 'Comunidad',
+    desc: 'Conecta con otros productores y comparte experiencias.'
+  },
+  {
+    title: 'Reportes Inteligentes',
+    desc: 'Visualiza el progreso y accede a reportes detallados.'
+  },
+  {
+    title: 'Recursos y Aprendizaje',
+    desc: 'Accede a talleres, guías y recursos educativos.'
+  }
+];
+
 const Home = () => {
   return (
     <div className="home-video-container">
-      <video className="home-bg-video" autoPlay loop muted playsInline poster="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80">
-        <source src={video} type="video/mp4" />
-        Tu navegador no soporta el video de fondo.
-      </video>
-      <div className="home-overlay"/>
+      <section className="hero-split">
+        <div className="hero-split-left">
+          <img src={logo} alt="HuertaConecta Logo" className="hero-split-logo" />
+          <h1 className="hero-split-title">Conecta tu huerta con el mundo</h1>
+          <p className="hero-split-desc">La plataforma para gestionar, aprender y compartir sobre agricultura sostenible.</p>
+          <div className="hero-split-btns">
+            <a href="/auth" className="hero-split-btn main">Comenzar</a>
+          </div>
+        </div>
+        <div className="hero-split-right">
+          <video className="hero-split-video" autoPlay loop muted playsInline poster="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80">
+            <source src={video} type="video/mp4" />
+            Tu navegador no soporta el video de fondo.
+          </video>
+          <div className="hero-split-video-overlay" />
+        </div>
+      </section>
+      <section className="features-hero-bg" style={{backgroundImage: `url(${homeImageUno})`}}>
+        <div className="features-hero-overlay" />
+        <div className="features-hero-content">
+          <h2 className="features-hero-title">¿Por qué elegir HuertaConecta?</h2>
+          <p className="features-hero-desc">Descubre las ventajas de nuestra plataforma para tu huerta y tu comunidad.</p>
+          <ul className="features-hero-list">
+            {features.map((f, idx) => (
+              <li key={idx} className="features-hero-item">
+                <span className="features-hero-item-title">{f.title}</span>
+                <span className="features-hero-item-desc">{f.desc}</span>
+              </li>
+            ))}
+          </ul>
+          <a href="/servicios" className="features-hero-btn">Descubre nuestros servicios</a>
+        </div>
+      </section>
       <div className="home-content">
         <main className="snap-container">
-          <div className="snap-section">
-            <section className="hero">
-              <img src={logo} alt="HuertaConecta Logo" className="hero-logo" />
-              <h2>Conecta tu huerta con el mundo</h2>
-            </section>
-          </div>
           <div className="snap-section">
             <FeatureSection
               image={homeImageUno}
