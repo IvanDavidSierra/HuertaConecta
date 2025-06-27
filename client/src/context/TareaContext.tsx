@@ -64,6 +64,7 @@ interface TareaContextType {
   deleteTarea: (id: number) => Promise<{ success: boolean; error?: string }>;
   fetchTareas: () => Promise<void>;
   fetchTareasByUsuarioHuerta: (id_usuarios_huertas: number) => Promise<Tarea[]>;
+  fetchTareasByHuerta: (id_huerta: number) => Promise<Tarea[]>;
   fetchEstadosTareas: () => Promise<void>;
   updateEstadoTarea: (id_tarea: number, id_estado_tarea: number) => Promise<{ success: boolean; error?: string }>;
 }
@@ -140,6 +141,20 @@ export const TareaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return data.map(mapBackendToFrontend);
     } catch (err) {
       console.error('Error al obtener tareas por usuario-huerta:', err);
+      return [];
+    }
+  };
+
+  const fetchTareasByHuerta = async (id_huerta: number): Promise<Tarea[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tarea/huerta/${id_huerta}`);
+      if (!response.ok) {
+        throw new Error('Error al obtener tareas de la huerta');
+      }
+      const data: TareaBackend[] = await response.json();
+      return data.map(mapBackendToFrontend);
+    } catch (err) {
+      console.error('Error al obtener tareas por huerta:', err);
       return [];
     }
   };
@@ -270,6 +285,7 @@ export const TareaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     deleteTarea,
     fetchTareas,
     fetchTareasByUsuarioHuerta,
+    fetchTareasByHuerta,
     fetchEstadosTareas,
     updateEstadoTarea,
   };

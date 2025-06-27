@@ -116,6 +116,24 @@ export class TareasAdapter implements TareasPort {
     }
   }
 
+  async getTareasByHuertaId(id_huerta: number): Promise<Tarea[]> {
+    try {
+      // Buscar todas las tareas de usuarios_huertas que pertenezcan a la huerta
+      const tareas = await this.tareasRepository.createQueryBuilder('tarea')
+        .leftJoinAndSelect('tarea.usuario_huerta', 'usuario_huerta')
+        .leftJoinAndSelect('usuario_huerta.usuario', 'usuario')
+        .leftJoinAndSelect('usuario_huerta.huerta', 'huerta')
+        .leftJoinAndSelect('tarea.estado_tarea', 'estado_tarea')
+        .leftJoinAndSelect('tarea.cultivo', 'cultivo')
+        .where('usuario_huerta.id_huerta = :id_huerta', { id_huerta })
+        .getMany();
+      return tareas.map(t => this.toDomain(t));
+    } catch (error) {
+      console.error("Error fetching tareas by huerta ID", error);
+      throw new Error("Failed to fetch tareas");
+    }
+  }
+
   async getAllTareas(): Promise<Tarea[]> {
     try {
       const tareas = await this.tareasRepository.find({ relations: ['estado_tarea', 'cultivo', 'usuario_huerta', 'usuario_huerta.usuario'] });

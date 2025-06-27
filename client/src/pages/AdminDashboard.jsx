@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   const { showToast } = useToast();
   const { register } = useAuth();
   const { huertas, loading: huertasLoading, createHuerta, updateHuerta, deleteHuerta } = useHuerta();
-  const { publicaciones, loading: publicacionesLoading, createPublicacion, updatePublicacion, deletePublicacion } = usePublicacion();
+  const { publicaciones, loading: publicacionesLoading, createPublicacion, updatePublicacion, deletePublicacion, fetchPublicaciones } = usePublicacion();
   const { cultivos, loading: cultivosLoading, createCultivo, updateCultivo, deleteCultivo } = useCultivo();
 
   useEffect(() => {
@@ -126,15 +126,19 @@ const AdminDashboard = () => {
     const result = await createPublicacion(formData);
     if (result.success) {
       showToast('Publicación creada exitosamente', 'success');
+      // Actualizar la lista de publicaciones
+      await fetchPublicaciones();
     } else {
       showToast(`Error al crear publicación: ${result.error}`, 'error');
     }
   };
 
   const handleUpdatePublicacion = async (formData) => {
-    const result = await updatePublicacion(formData.id, formData);
+    const result = await updatePublicacion(formData.id_publicacion, formData);
     if (result.success) {
       showToast('Publicación actualizada exitosamente', 'success');
+      // Actualizar la lista de publicaciones
+      await fetchPublicaciones();
     } else {
       showToast(`Error al actualizar publicación: ${result.error}`, 'error');
     }
@@ -144,6 +148,8 @@ const AdminDashboard = () => {
     const result = await deletePublicacion(id);
     if (result.success) {
       showToast('Publicación eliminada exitosamente', 'success');
+      // Actualizar la lista de publicaciones
+      await fetchPublicaciones();
     } else {
       showToast(`Error al eliminar publicación: ${result.error}`, 'error');
     }

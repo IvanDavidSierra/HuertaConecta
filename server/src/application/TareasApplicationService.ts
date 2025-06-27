@@ -16,6 +16,9 @@ export class TareasApplicationService {
   static getTareasByUsuarioHuertaId(id_usuarios_huertas: number) {
     return tareasAdapter.getTareasByUsuarioHuertaId(id_usuarios_huertas);
   }
+  static getTareasByHuertaId(id_huerta: number) {
+    return tareasAdapter.getTareasByHuertaId(id_huerta);
+  }
   static getAllTareas() {
     return tareasAdapter.getAllTareas();
   }

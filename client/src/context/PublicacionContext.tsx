@@ -1,12 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface Publicacion {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  contenido: string;
-  id_huerta: number;
-  id_usuario: number;
+  id_publicacion: number;
+  titulo_post: string;
+  contenido_post: string;
+  fecha_post: string;
+  id_usuarios_huertas: {
+    id_usuarios_huertas: number;
+    id_usuario: {
+      id_usuario: number;
+      nombre: string;
+      apellido: string;
+      correo: string;
+    };
+    id_huerta: {
+      id_huerta: number;
+      nombre_huerta: string;
+      direccion_huerta: string;
+      descripcion: string;
+    };
+    fecha_vinculacion: string;
+  };
 }
 
 interface PublicacionContextType {
@@ -14,7 +28,8 @@ interface PublicacionContextType {
   loading: boolean;
   error: string | null;
   fetchPublicaciones: () => Promise<void>;
-  createPublicacion: (publicacion: Omit<Publicacion, 'id'>) => Promise<{ success: boolean; data?: any; error?: string }>;
+  fetchPublicacionesByHuertaId: (huertaId: number) => Promise<Publicacion[]>;
+  createPublicacion: (publicacion: { titulo_post: string; contenido_post: string; id_usuarios_huertas: number }) => Promise<{ success: boolean; data?: any; error?: string }>;
   updatePublicacion: (id: number, publicacion: Partial<Publicacion>) => Promise<{ success: boolean; data?: any; error?: string }>;
   deletePublicacion: (id: number) => Promise<{ success: boolean; error?: string }>;
 }
@@ -57,16 +72,34 @@ export const PublicacionProvider: React.FC<PublicacionProviderProps> = ({ childr
     }
   };
 
+  // Obtener publicaciones por ID de huerta
+  const fetchPublicacionesByHuertaId = async (huertaId: number): Promise<Publicacion[]> => {
+    try {
+      const response = await fetch(`/api/publicaciones/huerta/${huertaId}`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al obtener publicaciones de la huerta');
+      }
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('Error al obtener publicaciones de la huerta:', errorMessage);
+      return [];
+    }
+  };
+
   // Crear publicación
-  const createPublicacion = async (publicacion: Omit<Publicacion, 'id'>): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const createPublicacion = async (publicacion: { titulo_post: string; contenido_post: string; id_usuarios_huertas: number }): Promise<{ success: boolean; data?: any; error?: string }> => {
     try {
       setError(null);
+      console.log('PublicacionContext - Datos recibidos:', publicacion);
       const response = await fetch('/api/publicaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(publicacion),
       });
       const data = await response.json();
+      console.log('PublicacionContext - Respuesta del backend:', data);
       if (!response.ok) {
         throw new Error(data.message || 'Error al crear publicación');
       }
@@ -74,6 +107,7 @@ export const PublicacionProvider: React.FC<PublicacionProviderProps> = ({ childr
       return { success: true, data };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('PublicacionContext - Error:', errorMessage);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -130,6 +164,7 @@ export const PublicacionProvider: React.FC<PublicacionProviderProps> = ({ childr
     loading,
     error,
     fetchPublicaciones,
+    fetchPublicacionesByHuertaId,
     createPublicacion,
     updatePublicacion,
     deletePublicacion,

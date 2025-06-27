@@ -9,6 +9,7 @@ import publicacionesRoutes  from "../routes/PublicacionesRoutes";
 import estadosTareasRouter from "../routes/EstadosTareasRoutes";
 import cultivosRouter from "../routes/CultivosRoutes";
 import tareasRouter from "../routes/TareasRoutes";
+import dashboardRoutes from "../routes/DashboardRoutes";
 
 class App {
     private app: express.Application;
@@ -29,6 +30,7 @@ class App {
         this.app.use("/api", estadosTareasRouter);
         this.app.use("/api", cultivosRouter);
         this.app.use("/api", tareasRouter);
+        this.app.use("/api/dashboard", dashboardRoutes);
     }
 
     private middleware():void{

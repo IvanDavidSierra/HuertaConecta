@@ -4,9 +4,8 @@ import { useUsuariosHuertas } from '../../../context/UsuariosHuertasContext.tsx'
 const PublicacionForm = ({ initialData = {}, onSubmit, onCancel, isEdit = false }) => {
   const { usuariosHuertas } = useUsuariosHuertas();
   const [form, setForm] = useState({
-    titulo: initialData?.titulo || '',
-    descripcion: initialData?.descripcion || '',
-    contenido: initialData?.contenido || '',
+    titulo_post: initialData?.titulo_post || initialData?.titulo || '',
+    contenido_post: initialData?.contenido_post || initialData?.contenido || '',
     id_usuarios_huertas: initialData?.id_usuarios_huertas || ''
   });
   const [errors, setErrors] = useState({});
@@ -17,14 +16,11 @@ const PublicacionForm = ({ initialData = {}, onSubmit, onCancel, isEdit = false 
 
   const validate = () => {
     const newErrors = {};
-    if (form.titulo.trim().length < 5) {
-      newErrors.titulo = 'El título debe tener al menos 5 caracteres';
+    if (form.titulo_post.trim().length < 5) {
+      newErrors.titulo_post = 'El título debe tener al menos 5 caracteres';
     }
-    if (form.descripcion.trim().length < 10) {
-      newErrors.descripcion = 'La descripción debe tener al menos 10 caracteres';
-    }
-    if (form.contenido.trim().length < 20) {
-      newErrors.contenido = 'El contenido debe tener al menos 20 caracteres';
+    if (form.contenido_post.trim().length < 20) {
+      newErrors.contenido_post = 'El contenido debe tener al menos 20 caracteres';
     }
     if (!form.id_usuarios_huertas) {
       newErrors.id_usuarios_huertas = 'Selecciona una relación usuario-huerta';
@@ -38,10 +34,9 @@ const PublicacionForm = ({ initialData = {}, onSubmit, onCancel, isEdit = false 
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
     onSubmit({
-      titulo: form.titulo,
-      descripcion: form.descripcion,
-      contenido: form.contenido,
-      id_usuarios_huertas: form.id_usuarios_huertas
+      titulo_post: form.titulo_post,
+      contenido_post: form.contenido_post,
+      id_usuarios_huertas: parseInt(form.id_usuarios_huertas)
     });
   };
 
@@ -58,34 +53,24 @@ const PublicacionForm = ({ initialData = {}, onSubmit, onCancel, isEdit = false 
       </select>
       {errors.id_usuarios_huertas && <div className="error-message">{errors.id_usuarios_huertas}</div>}
       <input 
-        name="titulo" 
-        placeholder="Título" 
-        value={form.titulo} 
+        name="titulo_post" 
+        placeholder="Título de la publicación" 
+        value={form.titulo_post} 
         onChange={handleChange} 
         required 
       />
       <div style={{fontSize: '0.9em', color: '#888'}}>Mínimo 5 caracteres</div>
-      {errors.titulo && <div className="error-message">{errors.titulo}</div>}
+      {errors.titulo_post && <div className="error-message">{errors.titulo_post}</div>}
       <textarea 
-        name="descripcion" 
-        placeholder="Descripción" 
-        value={form.descripcion} 
-        onChange={handleChange} 
-        required 
-        rows="3"
-      />
-      <div style={{fontSize: '0.9em', color: '#888'}}>Mínimo 10 caracteres</div>
-      {errors.descripcion && <div className="error-message">{errors.descripcion}</div>}
-      <textarea 
-        name="contenido" 
-        placeholder="Contenido" 
-        value={form.contenido} 
+        name="contenido_post" 
+        placeholder="Contenido de la publicación" 
+        value={form.contenido_post} 
         onChange={handleChange} 
         required 
         rows="6"
       />
       <div style={{fontSize: '0.9em', color: '#888'}}>Mínimo 20 caracteres</div>
-      {errors.contenido && <div className="error-message">{errors.contenido}</div>}
+      {errors.contenido_post && <div className="error-message">{errors.contenido_post}</div>}
       <div className="form-actions">
         <button type="submit" className="save-btn">{isEdit ? 'Guardar' : 'Crear'}</button>
         <button type="button" className="cancel-btn" onClick={onCancel}>Cancelar</button>

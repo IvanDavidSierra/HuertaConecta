@@ -5,6 +5,7 @@ import { useUsuariosHuertas } from '../context/UsuariosHuertasContext.tsx';
 import { useTipoUsuario } from '../context/TipoUsuarioContext.tsx';
 import { useTarea } from '../context/TareaContext.tsx';
 import { useCultivo } from '../context/CultivoContext';
+import { usePublicacion } from '../context/PublicacionContext.tsx';
 import { useToast } from '../context/ToastContext.tsx';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
@@ -16,114 +17,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './Dashboard.css';
 import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
 
-const huertasEjemplo = [
-  {
-    id: 1,
-    nombre: 'Huerta El Paraíso',
-    direccion: 'Calle 123, Ciudad',
-    descripcion: 'Huerta orgánica con variedad de cultivos',
-    propietario: 'Juan Pérez',
-  },
-  {
-    id: 2,
-    nombre: 'Huerta Verde',
-    direccion: 'Avenida 456, Pueblo',
-    descripcion: 'Especializada en hortalizas',
-    propietario: 'María García',
-  },
-];
-
-const sugerencias = [
-  {
-    id: 3,
-    nombre: 'Huerta Urbana',
-    seguidores: '1.2K',
-  },
-  {
-    id: 4,
-    nombre: 'EcoHuerta',
-    seguidores: '980',
-  },
-];
-
-// Mensajes de ejemplo para las huertas
-const mensajesEjemplo = {
-  1: [
-    {
-      id: 1,
-      tipo: 'publicacion',
-      usuario: 'Ana López',
-      contenido: '¡Hoy coseché tomates hermosos! 🍅',
-      fecha: '2024-01-15T10:30:00',
-      avatar: 'AL'
-    },
-    {
-      id: 2,
-      tipo: 'tarea',
-      usuario: 'Carlos Ruiz',
-      contenido: 'Regué las plantas de la mañana',
-      fecha: '2024-01-15T09:15:00',
-      avatar: 'CR',
-      completada: true
-    },
-    {
-      id: 3,
-      tipo: 'publicacion',
-      usuario: 'María García',
-      contenido: 'Las zanahorias están creciendo muy bien 🌱',
-      fecha: '2024-01-15T08:45:00',
-      avatar: 'MG'
-    }
-  ],
-  2: [
-    {
-      id: 1,
-      tipo: 'publicacion',
-      usuario: 'Pedro Silva',
-      contenido: 'Nuevas semillas de lechuga plantadas',
-      fecha: '2024-01-15T11:20:00',
-      avatar: 'PS'
-    },
-    {
-      id: 2,
-      tipo: 'tarea',
-      usuario: 'Laura Torres',
-      contenido: 'Fertilización de las plantas',
-      fecha: '2024-01-15T10:00:00',
-      avatar: 'LT',
-      completada: false
-    }
-  ]
-};
-
-const miembrosEjemplo = [
-  { nombre: 'Ana López', rol: 'Miembro' },
-  { nombre: 'Carlos Ruiz', rol: 'Miembro' },
-  { nombre: 'María García', rol: 'Propietario' },
-];
-const tareasEjemplo = [
-  { 
-    tarea: 'Regar plantas', 
-    estado: 'Completada', 
-    asignado: 'Ana López',
-    descripcion: 'Regar todas las plantas del invernadero con agua filtrada. Especial atención a los tomates que están en floración.',
-    comentarios: [
-      { usuario: 'Ana López', texto: 'Regado completado a las 8:00 AM', fecha: '2024-01-15T08:00:00' },
-      { usuario: 'María García', texto: 'Perfecto, las plantas se ven muy saludables', fecha: '2024-01-15T08:30:00' }
-    ]
-  },
-  { 
-    tarea: 'Fertilizar', 
-    estado: 'Pendiente', 
-    asignado: 'Carlos Ruiz',
-    descripcion: 'Aplicar fertilizante orgánico a las hortalizas. Usar la mezcla preparada con compost y humus.',
-    comentarios: [
-      { usuario: 'Carlos Ruiz', texto: 'Preparando la mezcla de fertilizante', fecha: '2024-01-15T09:00:00' }
-    ]
-  },
-];
-
-const cultivosEjemplo = ['Tomate cherry', 'Lechuga', 'Zanahoria', 'Pepino', 'Albahaca'];
 
 const animationVariants = {
   initial: { scale: 0.95, opacity: 0 },
@@ -162,8 +55,9 @@ const Dashboard = () => {
   const { huertas, loading: huertasLoading, error: huertasError, fetchHuertas, createHuerta } = useHuerta();
   const { fetchUsuariosHuertas, fetchUsuariosHuertasByUserId } = useUsuariosHuertas();
   const { tiposUsuario } = useTipoUsuario();
-  const { tareas, estadosTareas, loading: tareasLoading, createTarea, updateTarea, deleteTarea, fetchTareasByUsuarioHuerta, updateEstadoTarea } = useTarea();
+  const { tareas, estadosTareas, loading: tareasLoading, createTarea, updateTarea, deleteTarea, fetchTareasByUsuarioHuerta, fetchTareasByHuerta, updateEstadoTarea } = useTarea();
   const { cultivos } = useCultivo();
+  const { createPublicacion, fetchPublicacionesByHuertaId } = usePublicacion();
   const { showToast } = useToast();
   const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -191,6 +85,11 @@ const Dashboard = () => {
     id_cultivo: 1,
     id_usuarios_huertas: 0
   });
+  const [showCrearPublicacion, setShowCrearPublicacion] = useState(false);
+  const [nuevaPublicacion, setNuevaPublicacion] = useState({
+    titulo_post: '',
+    contenido_post: ''
+  });
   const [showDiscoverPanel, setShowDiscoverPanel] = useState(false);
   const [showCrearHuerta, setShowCrearHuerta] = useState(false);
   const [nuevaHuerta, setNuevaHuerta] = useState({ nombre: '', descripcion: '', direccion: '' });
@@ -202,6 +101,7 @@ const Dashboard = () => {
   const [loadingMiembros, setLoadingMiembros] = useState(false);
   const [tareasHuerta, setTareasHuerta] = useState([]);
   const [loadingTareas, setLoadingTareas] = useState(false);
+  const feedRef = useRef(null);
   
   console.log('huertaSeleccionada (detallado):', huertaSeleccionada, typeof huertaSeleccionada);
 
@@ -239,12 +139,12 @@ const Dashboard = () => {
   useEffect(() => {
     const cargarFeed = async () => {
       if (huertaSeleccionada) {
-        // 1. Cargar publicaciones reales de la huerta
+        // 1. Cargar publicaciones reales de la huerta usando el contexto
         let publicaciones = [];
         try {
-          const resPub = await fetch(`/api/publicaciones/huerta/${huertaSeleccionada.id_huerta}`);
-          publicaciones = await resPub.json();
+          publicaciones = await fetchPublicacionesByHuertaId(huertaSeleccionada.id_huerta);
         } catch (e) {
+          console.error('Error al cargar publicaciones:', e);
           publicaciones = [];
         }
 
@@ -253,7 +153,8 @@ const Dashboard = () => {
           id: tarea.id_tarea,
           tipo: 'tarea',
           usuario: tarea.usuario_huerta?.id_usuario?.nombre + ' ' + tarea.usuario_huerta?.id_usuario?.apellido,
-          contenido: tarea.titulo + ': ' + tarea.descripcion,
+          titulo: tarea.titulo,
+          contenido: tarea.descripcion,
           fecha: tarea.fecha_creacion || tarea.fecha_inicio,
           avatar: (tarea.usuario_huerta?.id_usuario?.nombre?.[0] || '') + (tarea.usuario_huerta?.id_usuario?.apellido?.[0] || ''),
           estado: tarea.estado_tarea?.descripcion_estado_tarea || 'Pendiente'
@@ -262,16 +163,17 @@ const Dashboard = () => {
         // 3. Mapear publicaciones al formato de mensaje
         const publicacionesComoMensajes = publicaciones.map(pub => ({
           id: pub.id_publicacion,
-          tipo: 'publicacion',
+          tipo: pub.titulo_post.startsWith('Mensaje_') ? 'mensaje' : 'publicacion',
           usuario: pub.id_usuarios_huertas?.id_usuario?.nombre + ' ' + pub.id_usuarios_huertas?.id_usuario?.apellido,
-          contenido: pub.contenido_post || pub.contenido,
-          fecha: pub.fecha_post || pub.fecha_creacion,
+          titulo: pub.titulo_post.startsWith('Mensaje_') ? 'Mensaje' : pub.titulo_post,
+          contenido: pub.contenido_post,
+          fecha: pub.fecha_post,
           avatar: (pub.id_usuarios_huertas?.id_usuario?.nombre?.[0] || '') + (pub.id_usuarios_huertas?.id_usuario?.apellido?.[0] || '')
         }));
 
         // 4. Unir y ordenar por fecha
         const feed = [...tareasComoMensajes, ...publicacionesComoMensajes].sort(
-          (a, b) => new Date(b.fecha) - new Date(a.fecha)
+          (a, b) => new Date(a.fecha) - new Date(b.fecha)
         );
 
         setMensajes(feed);
@@ -279,7 +181,7 @@ const Dashboard = () => {
     };
 
     cargarFeed();
-  }, [huertaSeleccionada, tareasHuerta]);
+  }, [huertaSeleccionada, tareasHuerta, fetchPublicacionesByHuertaId]);
 
   useEffect(() => {
     if (editandoTarea && textareaRef.current) {
@@ -319,16 +221,13 @@ const Dashboard = () => {
       if (huertaSeleccionada?.id_huerta) {
         setLoadingTareas(true);
         try {
-          // Obtener la relación usuario-huerta para el usuario actual
-          const relacionUsuarioHuerta = misHuertas.find(
-            h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
-          );
-          
-          if (relacionUsuarioHuerta) {
-            const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
-            setTareasHuerta(tareas);
-          } else {
-            setTareasHuerta([]);
+          // Obtener todas las tareas de la huerta
+          const tareas = await fetchTareasByHuerta(huertaSeleccionada.id_huerta);
+          setTareasHuerta(tareas);
+          // Buscar la tarea editada y setearla como seleccionada para actualizar el modal
+          if (tareaSeleccionada) {
+            const tareaActualizada = tareas.find(t => t.id_tarea === tareaSeleccionada.id_tarea);
+            if (tareaActualizada) setTareaSeleccionada(tareaActualizada);
           }
         } catch (error) {
           console.error('Error al obtener tareas de la huerta:', error);
@@ -339,7 +238,13 @@ const Dashboard = () => {
       }
     };
     fetchTareasHuerta();
-  }, [huertaSeleccionada, misHuertas, fetchTareasByUsuarioHuerta]);
+  }, [huertaSeleccionada, fetchTareasByHuerta]);
+
+  useEffect(() => {
+    if (feedRef.current) {
+      feedRef.current.scrollTop = feedRef.current.scrollHeight;
+    }
+  }, [mensajes]);
 
   // Función para verificar si el usuario es propietario de la huerta seleccionada
   const esPropietarioDeHuerta = () => {
@@ -366,19 +271,78 @@ const Dashboard = () => {
     setNuevoMensaje('');
   };
 
-  const handleEnviarMensaje = () => {
+  const handleEnviarMensaje = async () => {
     if (nuevoMensaje.trim() && huertaSeleccionada) {
-      const nuevoMensajeObj = {
-        id: Date.now(),
-        tipo: 'publicacion',
-        usuario: `${user.nombre} ${user.apellido}`,
-        contenido: nuevoMensaje,
-        fecha: new Date().toISOString(),
-        avatar: `${user.nombre[0]}${user.apellido[0]}`
-      };
-      
-      setMensajes(prev => [...prev, nuevoMensajeObj]);
-      setNuevoMensaje('');
+      try {
+        // Obtener la relación usuario-huerta para el usuario actual
+        const relacionUsuarioHuerta = misHuertas.find(
+          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+        );
+
+        if (!relacionUsuarioHuerta) {
+          showToast('No tienes permisos para enviar mensajes en esta huerta', 'error');
+          return;
+        }
+
+        // Crear la publicación con el mensaje
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 8);
+        const tituloUnico = `Mensaje_${timestamp}_${randomId}`;
+        
+        const publicacionData = {
+          titulo_post: tituloUnico,
+          contenido_post: nuevoMensaje,
+          id_usuarios_huertas: relacionUsuarioHuerta.id_usuarios_huertas
+        };
+
+        console.log('Datos a enviar al backend:', publicacionData);
+        console.log('Relación usuario-huerta encontrada:', relacionUsuarioHuerta);
+
+        const result = await createPublicacion(publicacionData);
+        
+        if (result.success) {
+          // Limpiar el input
+          setNuevoMensaje('');
+          
+          // Recargar publicaciones y actualizar el feed
+          const publicaciones = await fetchPublicacionesByHuertaId(huertaSeleccionada.id_huerta);
+          
+          // Mapear publicaciones al formato de mensaje
+          const publicacionesComoMensajes = publicaciones.map(pub => ({
+            id: pub.id_publicacion,
+            tipo: pub.titulo_post.startsWith('Mensaje_') ? 'mensaje' : 'publicacion',
+            usuario: pub.id_usuarios_huertas?.id_usuario?.nombre + ' ' + pub.id_usuarios_huertas?.id_usuario?.apellido,
+            titulo: pub.titulo_post.startsWith('Mensaje_') ? 'Mensaje' : pub.titulo_post,
+            contenido: pub.contenido_post,
+            fecha: pub.fecha_post,
+            avatar: (pub.id_usuarios_huertas?.id_usuario?.nombre?.[0] || '') + (pub.id_usuarios_huertas?.id_usuario?.apellido?.[0] || '')
+          }));
+
+          // Mapear tareas al formato de mensaje
+          const tareasComoMensajes = tareasHuerta.map(tarea => ({
+            id: tarea.id_tarea,
+            tipo: 'tarea',
+            usuario: tarea.usuario_huerta?.id_usuario?.nombre + ' ' + tarea.usuario_huerta?.id_usuario?.apellido,
+            titulo: tarea.titulo,
+            contenido: tarea.descripcion,
+            fecha: tarea.fecha_creacion || tarea.fecha_inicio,
+            avatar: (tarea.usuario_huerta?.id_usuario?.nombre?.[0] || '') + (tarea.usuario_huerta?.id_usuario?.apellido?.[0] || ''),
+            estado: tarea.estado_tarea?.descripcion_estado_tarea || 'Pendiente'
+          }));
+
+          // Unir y ordenar por fecha
+          const feed = [...tareasComoMensajes, ...publicacionesComoMensajes].sort(
+            (a, b) => new Date(a.fecha) - new Date(b.fecha)
+          );
+
+          setMensajes(feed);
+        } else {
+          showToast(`Error al enviar mensaje: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error al enviar mensaje:', error);
+        showToast('Error al enviar mensaje', 'error');
+      }
     }
   };
 
@@ -404,6 +368,20 @@ const Dashboard = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getEstadoTarea = (estado) => {
+    const estadoLower = estado?.toLowerCase() || 'pendiente';
+    
+    if (estadoLower.includes('completada') || estadoLower.includes('finalizada')) {
+      return { emoji: '✅', texto: 'Completada', clase: 'completed' };
+    } else if (estadoLower.includes('en progreso') || estadoLower.includes('progreso')) {
+      return { emoji: '🔄', texto: 'En Progreso', clase: 'en-progreso' };
+    } else if (estadoLower.includes('cancelada') || estadoLower.includes('cancelada')) {
+      return { emoji: '❌', texto: 'Cancelada', clase: 'cancelada' };
+    } else {
+      return { emoji: '⏳', texto: 'Pendiente', clase: 'pending' };
+    }
   };
 
   const handleTareaClick = (tarea) => {
@@ -439,21 +417,19 @@ const Dashboard = () => {
     }
 
     try {
-      const result = await updateTarea(tareaSeleccionada.id_tarea, tareaEdit);
+      const result = await updateTarea(tareaSeleccionada.id_tarea, {
+        ...tareaEdit,
+        id_usuarios_huertas: tareaSeleccionada.id_usuarios_huertas
+      });
       
       if (result.success) {
         showToast('Tarea actualizada exitosamente', 'success');
         setEditandoTarea(false);
         setTareaSeleccionada({ ...tareaSeleccionada, ...tareaEdit });
         // Recargar tareas
-        const relacionUsuarioHuerta = misHuertas.find(
-          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
-        );
-        if (relacionUsuarioHuerta) {
-          const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
-          console.log('Tareas tras actualizar tarea:', tareas);
-          setTareasHuerta(tareas);
-        }
+        const tareas = await fetchTareasByHuerta(huertaSeleccionada.id_huerta);
+        console.log('Tareas tras actualizar tarea:', tareas);
+        setTareasHuerta(tareas);
       } else {
         showToast(`Error al actualizar tarea: ${result.error}`, 'error');
       }
@@ -477,13 +453,8 @@ const Dashboard = () => {
         setShowTareaModal(false);
         setTareaSeleccionada(null);
         // Recargar tareas
-        const relacionUsuarioHuerta = misHuertas.find(
-          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
-        );
-        if (relacionUsuarioHuerta) {
-          const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
-          setTareasHuerta(tareas);
-        }
+        const tareas = await fetchTareasByHuerta(huertaSeleccionada.id_huerta);
+        setTareasHuerta(tareas);
       } else {
         showToast(`Error al eliminar tarea: ${result.error}`, 'error');
       }
@@ -553,6 +524,7 @@ const Dashboard = () => {
       };
 
       console.log('Datos de tarea a enviar:', tareaData);
+      console.log('ID de cultivo seleccionado:', tareaData.id_cultivo, typeof tareaData.id_cultivo);
 
       const result = await createTarea(tareaData);
       
@@ -560,7 +532,7 @@ const Dashboard = () => {
         showToast('Tarea creada exitosamente', 'success');
         setShowCrearTarea(false);
         // Recargar tareas
-        const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
+        const tareas = await fetchTareasByHuerta(huertaSeleccionada.id_huerta);
         setTareasHuerta(tareas);
         // Agregar como mensaje en el chat
         const nuevaTareaMensaje = {
@@ -779,20 +751,99 @@ const Dashboard = () => {
           estado_tarea: nuevoEstado
         });
         // Recargar tareas
-        const relacionUsuarioHuerta = misHuertas.find(
-          h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
-        );
-        if (relacionUsuarioHuerta) {
-          const tareas = await fetchTareasByUsuarioHuerta(relacionUsuarioHuerta.id_usuarios_huertas);
-          console.log('Tareas tras actualizar estado:', tareas);
-          setTareasHuerta(tareas);
-        }
+        const tareas = await fetchTareasByHuerta(huertaSeleccionada.id_huerta);
+        console.log('Tareas tras actualizar estado:', tareas);
+        setTareasHuerta(tareas);
       } else {
         showToast(`Error al actualizar estado: ${result.error}`, 'error');
       }
     } catch (error) {
       console.error('Error al actualizar estado de tarea:', error);
       showToast('Error al actualizar estado de tarea', 'error');
+    }
+  };
+
+  // Funciones para manejar publicaciones
+  const handleAbrirCrearPublicacion = () => {
+    setNuevaPublicacion({
+      titulo_post: '',
+      contenido_post: ''
+    });
+    setShowCrearPublicacion(true);
+  };
+
+  const handleCancelarCrearPublicacion = () => {
+    setShowCrearPublicacion(false);
+  };
+
+  const handleGuardarCrearPublicacion = async () => {
+    if (!nuevaPublicacion.titulo_post.trim() || !nuevaPublicacion.contenido_post.trim()) {
+      showToast('Por favor completa todos los campos', 'error');
+      return;
+    }
+
+    try {
+      // Obtener la relación usuario-huerta para el usuario actual
+      const relacionUsuarioHuerta = misHuertas.find(
+        h => h.id_huerta?.id_huerta === huertaSeleccionada.id_huerta
+      );
+
+      if (!relacionUsuarioHuerta) {
+        showToast('No tienes permisos para crear publicaciones en esta huerta', 'error');
+        return;
+      }
+
+      const publicacionData = {
+        ...nuevaPublicacion,
+        id_usuarios_huertas: relacionUsuarioHuerta.id_usuarios_huertas
+      };
+
+      console.log('Datos de publicación a enviar:', publicacionData);
+
+      const result = await createPublicacion(publicacionData);
+      
+      if (result.success) {
+        showToast('Publicación creada exitosamente', 'success');
+        setShowCrearPublicacion(false);
+        
+        // Recargar publicaciones y actualizar el feed
+        const publicaciones = await fetchPublicacionesByHuertaId(huertaSeleccionada.id_huerta);
+        
+        // Mapear publicaciones al formato de mensaje
+        const publicacionesComoMensajes = publicaciones.map(pub => ({
+          id: pub.id_publicacion,
+          tipo: pub.titulo_post.startsWith('Mensaje_') ? 'mensaje' : 'publicacion',
+          usuario: pub.id_usuarios_huertas?.id_usuario?.nombre + ' ' + pub.id_usuarios_huertas?.id_usuario?.apellido,
+          titulo: pub.titulo_post.startsWith('Mensaje_') ? 'Mensaje' : pub.titulo_post,
+          contenido: pub.contenido_post,
+          fecha: pub.fecha_post,
+          avatar: (pub.id_usuarios_huertas?.id_usuario?.nombre?.[0] || '') + (pub.id_usuarios_huertas?.id_usuario?.apellido?.[0] || '')
+        }));
+
+        // Mapear tareas al formato de mensaje
+        const tareasComoMensajes = tareasHuerta.map(tarea => ({
+          id: tarea.id_tarea,
+          tipo: 'tarea',
+          usuario: tarea.usuario_huerta?.id_usuario?.nombre + ' ' + tarea.usuario_huerta?.id_usuario?.apellido,
+          titulo: tarea.titulo,
+          contenido: tarea.descripcion,
+          fecha: tarea.fecha_creacion || tarea.fecha_inicio,
+          avatar: (tarea.usuario_huerta?.id_usuario?.nombre?.[0] || '') + (tarea.usuario_huerta?.id_usuario?.apellido?.[0] || ''),
+          estado: tarea.estado_tarea?.descripcion_estado_tarea || 'Pendiente'
+        }));
+
+        // Unir y ordenar por fecha
+        const feed = [...tareasComoMensajes, ...publicacionesComoMensajes].sort(
+          (a, b) => new Date(a.fecha) - new Date(b.fecha)
+        );
+
+        setMensajes(feed);
+      } else {
+        showToast(`Error al crear publicación: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error al crear publicación:', error);
+      showToast('Error al crear publicación', 'error');
     }
   };
 
@@ -932,7 +983,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* Mensajes */}
-                  <div className="chat-messages">
+                  <div className="feed-mensajes" ref={feedRef} style={{ overflowY: 'auto'}}>
                     {mensajes.length > 0 ? (
                       mensajes.map((mensaje, index) => (
                         <motion.div
@@ -954,11 +1005,29 @@ const Dashboard = () => {
                               <span className="message-user">{mensaje.usuario}</span>
                               <span className="message-time">{formatearFecha(mensaje.fecha)}</span>
                               {mensaje.tipo === 'tarea' && (
-                                <span className={`task-status estado-${mensaje.estado?.toLowerCase().replace(/\s/g, '-')}`}>{mensaje.estado}</span>
+                                (() => {
+                                  const estado = getEstadoTarea(mensaje.estado);
+                                  return (
+                                    <span className={`task-status ${estado.clase}`}>
+                                      {estado.emoji} {estado.texto}
+                                    </span>
+                                  );
+                                })()
                               )}
                             </div>
                             <div className="message-text">
-                              {mensaje.contenido}
+                              {mensaje.tipo === 'mensaje' ? (
+                                <div className="message-content-text">
+                                  {mensaje.contenido}
+                                </div>
+                              ) : (
+                                <>
+                                  <span className="message-title">{mensaje.titulo}</span>
+                                  <div className="message-content-text">
+                                    {mensaje.contenido}
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         </motion.div>
@@ -975,7 +1044,7 @@ const Dashboard = () => {
                     <div className="chat-input-wrapper chat-input-wrapper--grande">
                       <input
                         type="text"
-                        placeholder="Escribe una publicación..."
+                        placeholder="Escribe un mensaje..."
                         value={nuevoMensaje}
                         onChange={(e) => setNuevoMensaje(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
@@ -988,14 +1057,21 @@ const Dashboard = () => {
                       >
                         <AiOutlineSend />
                       </button>
+                      <button 
+                        className="chat-publication-btn"
+                        onClick={handleAbrirCrearPublicacion}
+                        title="Crear publicación"
+                      >
+                        <FiPlus />
+                      </button>
                       {esPropietarioDeHuerta() && (
-                        <button 
-                          className="chat-task-btn"
-                          onClick={handleAbrirCrearTarea}
+                      <button 
+                        className="chat-task-btn"
+                        onClick={handleAbrirCrearTarea}
                           title="Crear tarea"
-                        >
+                      >
                           <AiOutlineCheckSquare />
-                        </button>
+                      </button>
                       )}
                     </div>
                   </div>
@@ -1094,9 +1170,14 @@ const Dashboard = () => {
                         <div className="tarea-content">
                           <div className="tarea-header">
                             <span className="tarea-titulo">{tarea.titulo}</span>
-                            <span className={`info-tarea-estado ${tarea.estado_tarea?.descripcion_estado_tarea?.toLowerCase().includes('completada') ? 'completada' : 'pendiente'}`}>
-                              {tarea.estado_tarea?.descripcion_estado_tarea || 'Pendiente'}
-                            </span>
+                            {(() => {
+                              const estado = getEstadoTarea(tarea.estado_tarea?.descripcion_estado_tarea);
+                              return (
+                                <span className={`task-status ${estado.clase}`}>
+                                  {estado.emoji} {estado.texto}
+                                </span>
+                              );
+                            })()}
                           </div>
                           <span className="tarea-asignado">
                             Cultivo: {tarea.cultivo?.titulo_cultivo || 'Sin cultivo'}
@@ -1136,9 +1217,14 @@ const Dashboard = () => {
               <div className="modal-header">
                 <h2>{tareaSeleccionada.titulo}</h2>
                 <div className="modal-header-actions">
-                  <span className={`modal-estado ${tareaSeleccionada.estado_tarea?.descripcion_estado_tarea?.toLowerCase().includes('completada') ? 'completada' : 'pendiente'}`}>
-                    {tareaSeleccionada.estado_tarea?.descripcion_estado_tarea || 'Pendiente'}
-                  </span>
+                  {(() => {
+                    const estado = getEstadoTarea(tareaSeleccionada.estado_tarea?.descripcion_estado_tarea);
+                    return (
+                      <span className={`task-status ${estado.clase}`}>
+                        {estado.emoji} {estado.texto}
+                      </span>
+                    );
+                  })()}
                   {esPropietarioDeHuerta() && (
                     <>
                       <button className="modal-edit-btn" title="Editar tarea" onClick={handleEditarTarea}><FiEdit color="#fff" /></button>
@@ -1187,6 +1273,7 @@ const Dashboard = () => {
                   <div className="modal-section">
                     <h3>Cultivo</h3>
                     <select className="modal-input" value={tareaEdit.id_cultivo} onChange={e => setTareaEdit({ ...tareaEdit, id_cultivo: parseInt(e.target.value) })}>
+                      <option value="">Seleccionar cultivo</option>
                       {cultivos.map((cultivo, idx) => (
                         <option key={idx} value={cultivo.id_cultivo}>{cultivo.titulo}</option>
                       ))}
@@ -1214,7 +1301,14 @@ const Dashboard = () => {
                   </div>
                   <div className="modal-section">
                     <h3>Estado actual</h3>
-                    <p>{tareaSeleccionada.estado_tarea?.descripcion_estado_tarea || 'Pendiente'}</p>
+                    {(() => {
+                      const estado = getEstadoTarea(tareaSeleccionada.estado_tarea?.descripcion_estado_tarea);
+                      return (
+                        <span className={`task-status ${estado.clase}`}>
+                          {estado.emoji} {estado.texto}
+                        </span>
+                      );
+                    })()}
                     {esPropietarioDeHuerta() && (
                       <div className="estado-selector">
                         <h4>Cambiar estado:</h4>
@@ -1317,6 +1411,7 @@ const Dashboard = () => {
                 <div className="modal-section">
                   <h3>Cultivo</h3>
                   <select className="modal-input" value={nuevaTarea.id_cultivo} onChange={e => setNuevaTarea({ ...nuevaTarea, id_cultivo: parseInt(e.target.value) })}>
+                    <option value="">Seleccionar cultivo</option>
                     {cultivos.map((cultivo, idx) => (
                       <option key={idx} value={cultivo.id_cultivo}>{cultivo.titulo}</option>
                     ))}
@@ -1440,6 +1535,43 @@ const Dashboard = () => {
                   >
                     Cancelar
                   </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showCrearPublicacion && (
+          <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className="tarea-modal" initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}>
+              <div className="modal-header">
+                <h2>Nueva publicación</h2>
+                <button className="modal-close-btn" onClick={handleCancelarCrearPublicacion}>×</button>
+              </div>
+              <div className="tarea-modal-content">
+                <div className="modal-section">
+                  <h3>Título</h3>
+                  <input 
+                    className="modal-input" 
+                    value={nuevaPublicacion.titulo_post} 
+                    onChange={e => setNuevaPublicacion({ ...nuevaPublicacion, titulo_post: e.target.value })}
+                    placeholder="Ej: Cosecha de tomates"
+                  />
+                </div>
+                <div className="modal-section">
+                  <h3>Contenido</h3>
+                  <textarea 
+                    className="modal-input" 
+                    value={nuevaPublicacion.contenido_post} 
+                    onChange={e => setNuevaPublicacion({ ...nuevaPublicacion, contenido_post: e.target.value })}
+                    placeholder="Comparte lo que está pasando en tu huerta..."
+                    rows="6"
+                  />
+                </div>
+                <div className="modal-edit-actions">
+                  <button className="modal-save-btn" onClick={handleGuardarCrearPublicacion}>Publicar</button>
+                  <button className="modal-cancel-btn" onClick={handleCancelarCrearPublicacion}>Cancelar</button>
                 </div>
               </div>
             </motion.div>

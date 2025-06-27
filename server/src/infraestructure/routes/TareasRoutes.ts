@@ -43,6 +43,14 @@ router.get("/tarea/usuario-huerta/:id_usuarios_huertas", async(req,res)=>{
     }
 });
 
+router.get("/tarea/huerta/:id", async(req,res)=>{
+    try{
+        await TareasController.getTareasByHuertaId(req, res);
+    }catch (error) {
+        res.status(500).json({ message: "Error al obtener las tareas por huerta" });
+    }
+});
+
 router.put("/tarea/:id", async(req,res)=>{
     try{
         await TareasController.updateTarea(req, res);

@@ -38,14 +38,16 @@ const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
 
   const handleConfirmDelete = () => {
     if (confirmDelete.publicacion && onDelete) {
-      onDelete(confirmDelete.publicacion.id);
+      const publicacionId = confirmDelete.publicacion.id_publicacion || confirmDelete.publicacion.id;
+      onDelete(publicacionId);
     }
     handleCloseConfirm();
   };
 
   const handleSubmit = (formData) => {
     if (editPublicacion) {
-      onEdit({ ...editPublicacion, ...formData });
+      const publicacionId = editPublicacion.id_publicacion || editPublicacion.id;
+      onEdit({ id_publicacion: publicacionId, ...formData });
     } else {
       onCreate(formData);
     }
@@ -61,6 +63,12 @@ const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
     return u ? `${u.nombre} ${u.apellido}` : '-';
   };
 
+  // Función para truncar texto largo
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return '-';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
   return (
     <div className="admin-table-wrapper">
       <div className="admin-table-header">
@@ -72,23 +80,23 @@ const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
           <tr>
             <th>ID</th>
             <th>Título</th>
-            <th>Descripción</th>
             <th>Contenido</th>
             <th>Huerta</th>
             <th>Usuario</th>
+            <th>Fecha</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {publicaciones && publicaciones.length > 0 ? (
             publicaciones.map((pub) => (
-              <tr key={pub.id || pub.id_publicacion}>
-                <td>{pub.id || pub.id_publicacion}</td>
-                <td>{pub.titulo || pub.titulo_post}</td>
-                <td>{pub.descripcion || ''}</td>
-                <td>{pub.contenido || pub.contenido_post}</td>
+              <tr key={pub.id_publicacion || pub.id}>
+                <td>{pub.id_publicacion || pub.id}</td>
+                <td>{truncateText(pub.titulo_post || pub.titulo, 30)}</td>
+                <td>{truncateText(pub.contenido_post || pub.contenido, 50)}</td>
                 <td>{getHuertaNombre(pub)}</td>
                 <td>{getUsuarioNombre(pub)}</td>
+                <td>{pub.fecha_post ? new Date(pub.fecha_post).toLocaleDateString() : '-'}</td>
                 <td>
                   <button className="edit-btn" onClick={() => handleEdit(pub)}>Editar</button>
                   <button className="delete-btn" onClick={() => handleDelete(pub)}>Eliminar</button>
@@ -120,7 +128,7 @@ const PublicacionesTable = ({ publicaciones, onCreate, onEdit, onDelete }) => {
         onConfirm={handleConfirmDelete}
         title="Eliminar Publicación"
         message="¿Estás seguro de que quieres eliminar esta publicación?"
-        itemName={confirmDelete.publicacion ? confirmDelete.publicacion.titulo : ''}
+        itemName={confirmDelete.publicacion ? (confirmDelete.publicacion.titulo_post || confirmDelete.publicacion.titulo) : ''}
       />
     </div>
   );

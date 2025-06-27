@@ -33,6 +33,19 @@ export class TareasController {
     res.json(tareas);
   }
 
+  static async getTareasByHuertaId(req: Request, res: Response) {
+    try {
+      const tareas = await tareasAdapter.getTareasByHuertaId(Number(req.params.id));
+      res.json(tareas);
+    } catch (error) {
+      console.error('Error en getTareasByHuertaId controller:', error);
+      res.status(500).json({ 
+        message: "Error al obtener tareas de la huerta",
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      });
+    }
+  }
+
   static async getAllTareas(_req: Request, res: Response) {
     const tareas = await tareasAdapter.getAllTareas();
     res.json(tareas);
